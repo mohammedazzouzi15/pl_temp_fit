@@ -45,10 +45,17 @@ sdist/*
 docs/api/*
 docs/_rst/*
 docs/_build/*
+exp_results/*
+fit_results/*
+experiemental_data/*
 cover/*
 MANIFEST
+test_results/*
+fit_results/*
+
 
 # Per-project virtualenvs
 .venv*/
 .conda*/
 .python-version
+*.png

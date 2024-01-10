@@ -34,16 +34,18 @@ pl_temp_fit
 ===========
 
 
-    Add a short description here!
-
-
-A longer description of your project goes here...
+   code to fit a temperature dependent pl spectra of organic semiconductors
 
 
 .. _pyscaffold-notes:
 
 Note
 ====
+to install the package,
+ first install pymc 
+ conda create -c conda-forge -n pymc_env "pymc>=5"
+conda activate pymc_env
+pip install -e . # on the folder where pyproject.toml is located
 
 This project has been set up using PyScaffold 4.5. For details and usage
 information on PyScaffold see https://pyscaffold.org/.
