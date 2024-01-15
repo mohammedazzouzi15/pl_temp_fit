@@ -6,7 +6,7 @@ print(f"Running on PyMC v{pm.__version__}")
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-
+import datetime
 
 def main(
     num_samples=50,
@@ -28,10 +28,12 @@ def main(
         }
     X = {'temperature_list':temperature_list, 'hws':hws}
     # generate the data
-    true_parameters=[1.4, 9, -2.3, 0.1, 0.1, 0.15]
+    true_parameters=[1.4, 9, 0.1, 0.1, 0.15]
     truemodel_pl, true_parameters = generate_data(temperature_list, hws, **model_config, true_parameters=true_parameters)
+    date = datetime.datetime.now().strftime("%Y_%m_%d")
+
     save_folder = (
-        "test_results_EL_09_01/num_samples="
+        f"test_results_EL/{date}/num_samples="
         + str(num_samples)
         + " num_tune=" + str(num_tune)
         + " sigma=" + str(sigma)
@@ -43,13 +45,16 @@ def main(
     )
     os.makedirs(save_folder, exist_ok=True)
     true_model_pl_list,variance,arg_max_variance = plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_config, savefig=True, true_parameters=true_parameters)
-    variance = variance+ sigma # add min sigma to the variance
+    variance = variance + sigma # add min sigma to the variance
     ## initialise the model and run the fit
     model = ELPYMCModel.ELPYMCModel()
     for key, value in model_config.items():
         model.model_config[key] = value
     print(model.model_config)      
-    model.sampler_config['step'] = "pm.DEMetropolis()"#"[pm.DEMetropolis([self.E,self.LI,self.sigma_E]),pm.DEMetropolis([self.L0,self.H0])]"  
+    if number_free_parameters == 2:
+        model.sampler_config['step'] = "DEMetropolis(scaling=[0.1,1])"
+    else:
+        model.sampler_config['step'] = "DEMetropolis(scaling=[0.1,1,0.1,0.1,0.1])"#"[pm.DEMetropolis([self.E,self.LI,self.sigma_E]),pm.DEMetropolis([self.L0,self.H0])]"  
     print(model.sampler_config)
     model.fit(X, truemodel_pl, sigma=variance, draws=num_samples, tune=num_tune, chains=4, step=model.sampler_config['step'] , return_inferencedata=True)
     print(az.summary(model.idata))
@@ -121,14 +126,14 @@ def generate_data(temperature_list, hws,sigma,Temp_std_err,hws_std_err,relative_
                   **kwargs):
     if true_parameters is None:
         E_true = 1.4
-        k_EXCT_true, fosc_CT_true = 9, -2.3
+        k_EXCT_true = 9
         LI_true = 0.1
         L0_true = 0.1
         H0_true = 0.15
-        true_parameters = [E_true, k_EXCT_true, fosc_CT_true, LI_true, L0_true, H0_true]
+        true_parameters = [E_true, k_EXCT_true, LI_true, L0_true, H0_true]
 
     else:
-        E_true, k_EXCT_true, fosc_CT_true, LI_true, L0_true, H0_true = true_parameters
+        E_true, k_EXCT_true, LI_true, L0_true, H0_true = true_parameters
     # error in the temperature of the sample
     temperature_list = temperature_list+np.random.normal(0, Temp_std_err, len(temperature_list))
     # error in the detection wavelength
@@ -160,15 +165,15 @@ def generate_parameter_list(
     parameter_list = []
     parameter_list.append({
                 "num_samples": 50,
-                "num_tune": 10,
-                "sigma": 0.0001,
+                "num_tune": 50,
+                "sigma": 0.01,
                 "temperature_list": np.array([300.0, 150.0, 80.0]),
-                "number_free_parameters": 3,
+                "number_free_parameters": 2,
                 "Temp_std_err": 5,
                 "hws_std_err": 0.001,
                 "relative_intensity_std_error": 0.01,
             })
-    for i, j, k, l, m, n, o, p  in product(
+    for i, j, k, l, m, n, o, p in product(
         num_samples,
         num_tune,
         sigma,
@@ -204,16 +209,16 @@ if __name__ == "__main__":
     )
     test_number = argparser.parse_args().test_number
     print(f"Running test number {test_number}")
-    num_samples = [20000]
-    num_tune = [4000]
-    sigma = [0.0001]
+    num_samples = [6000]
+    num_tune = [1000]
+    sigma = [0.01]
 
     temperature_list = [
         [300.0, 250.0, 200.0, 150.0, 80.0],
         [300.0, 150.0, 80.0],
     ]
 
-    number_free_parameters = [3, 6]
+    number_free_parameters = [2, 5]
     Temp_std_err_list = [2,10,0.1]
     hws_std_err_list = [0.001]
     relative_intensity_std_error_list = [0.05,0.01]

@@ -10,6 +10,8 @@ import arviz as az
 from pathlib import Path
 import json
 import matplotlib.pyplot as plt
+from pl_temp_fit.Sampler import DEMetropolis, Metropolis
+
 
 
 class LogLike(pt.Op):
@@ -79,7 +81,7 @@ def pl_trial(theta, temperature_list, hws):
         H0=0.15,
         fosc=5,
     )
-    data.D.hw = hws  # np.arange(0.8, 2, 0.02)
+    data.D.hw = np.arange(0.5, 4, 0.02)
     data.D.T = temperature_list  # np.array([300.0, 150.0, 80.0])
     data.EX = LTPL.State(
         E=E,
@@ -95,8 +97,11 @@ def pl_trial(theta, temperature_list, hws):
     )
     LTPL.LTPLCalc(data)
     PL_results = data.D.kr_hw#.reshape(-1, 1)
+    PL_results_interp = np.zeros((len(hws), len(temperature_list)))
+    for i in range(len(temperature_list)):
+        PL_results_interp[:, i] = np.interp(hws, data.D.hw, PL_results[:, i])
 
-    return PL_results# / max(PL_results)
+    return PL_results_interp# / max(PL_results)
 
 
 class PLPYMCModel(ModelBuilder):
@@ -142,6 +147,7 @@ class PLPYMCModel(ModelBuilder):
         assert model_data.shape == sigma.shape
         # check that the data in model_data does not contain NaNs or infs
         if np.isnan(model_data).any() or np.isinf(model_data).any():
+            print("NaN in model_data")
             return -np.inf
         return -(0.5) * np.sum(((data - model_data)/sigma) ** 2)
 
@@ -202,7 +208,7 @@ class PLPYMCModel(ModelBuilder):
             "sigma_E": {"min": 0.001, "max": 0.03},
             "LI": {"mu": 0.12, "sigma": 0.01, "lower": 0.05, "upper": 0.15},
             "L0": {"mu": 0.12, "sigma": 0.01, "lower": 0.05, "upper": 0.15},
-            "H0": {"mu": 0.12, "sigma": 0.01, "lower": 0.12, "upper": 0.18},
+            "H0": {"mu": 0.15, "sigma": 0.01, "lower": 0.12, "upper": 0.18},
             "Temp_std_err": 2,
             "hws_std_err": 0.002,
             "relative_intensity_std_error": 0.1,
@@ -281,8 +287,6 @@ class PLPYMCModel(ModelBuilder):
         """
         Fit a model using the data passed as a parameter.
         Sets attrs to inference data of the model.
-
-
         Parameters
         ----------
         X : array-like if sklearn is available, otherwise array, shape (n_obs, n_features)
@@ -373,17 +377,24 @@ class PLPYMCModel(ModelBuilder):
 
         return model
 
-    def plot_trace(self, true_parameters, save_folder, savefig=True):
-        axes = az.plot_trace(
-            self.idata,
-            lines=[
-                ("E", {}, true_parameters[0]),
-                ("sigma_E", {}, true_parameters[1]),
-                ("LI", {}, true_parameters[2]),
-                ("L0", {}, true_parameters[3]),
-                ("H0", {}, true_parameters[4]),
-            ],
-        )
+    def plot_trace(self, true_parameters=None, save_folder="", savefig=True):
+        if true_parameters is None:
+
+            axes = az.plot_trace(
+                self.idata,
+            )
+        else:
+            axes = az.plot_trace(
+                self.idata,
+                lines=[
+                    ("E", {}, true_parameters[0]),
+                    ("sigma_E", {}, true_parameters[1]),
+                    ("LI", {}, true_parameters[2]),
+                    ("L0", {}, true_parameters[3]),
+                    ("H0", {}, true_parameters[4]),
+                ],
+            )
+
         fig = axes.ravel()[0].figure
         fig.suptitle("Trace plot " + save_folder.split("/")[-1])
         fig.tight_layout()

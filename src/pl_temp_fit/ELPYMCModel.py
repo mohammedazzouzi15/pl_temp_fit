@@ -10,6 +10,7 @@ import arviz as az
 from pathlib import Path
 import json
 import matplotlib.pyplot as plt
+from pl_temp_fit.Sampler import DEMetropolis,Metropolis
 
 
 class LogLike(pt.Op):
@@ -60,12 +61,13 @@ class LogLike(pt.Op):
         outputs[0][0] = np.array(logl)  # output the log-likelihood
 
 def el_trial(theta, temperature_list, hws):
-    if len(theta) == 3:
-        E, k_EXCT, fosc_CT = theta
+    if len(theta) == 2:
+        E, k_EXCT = theta
         LI, L0, H0 = 0.1, 0.1, 0.15
-    elif len(theta) == 6:
-        E, k_EXCT, fosc_CT, LI, L0, H0 = theta
-    
+    elif len(theta) == 5:
+        E, k_EXCT, LI, L0, H0 = theta
+    fosc_CT = -2.3
+
     data = LTL.Data()
     data.D.RCTE = 1
     data.CT = LTL.State(
@@ -80,7 +82,7 @@ def el_trial(theta, temperature_list, hws):
         H0=H0,
         fosc=10**fosc_CT,
     )
-    data.D.hw = hws  # np.arange(0.8, 2, 0.02)
+    data.D.hw = np.arange(0.5, 5, 0.02)
     data.D.T = temperature_list  # np.array([300.0, 150.0, 80.0])
     data.EX = LTL.State(
         E=1.5,
@@ -95,12 +97,13 @@ def el_trial(theta, temperature_list, hws):
         fosc=5,
     )
     data.D.kEXCT = 10**k_EXCT * np.exp(-(data.EX.E - data.CT.E)**2 * ((data.c.kb * 300) / 0.01 / (data.c.kb * data.D.T)))
-
     data.D.Luminecence_exp = 'EL'
     LTL.LTLCalc(data)
     EL_results = data.D.kr_hw#.reshape(-1, 1)
-
-    return EL_results# / max(PL_results)
+    EL_results_interp = np.zeros((len(hws), len(temperature_list)))
+    for i in range(len(temperature_list)):
+        EL_results_interp[:, i] = np.interp(hws, data.D.hw, EL_results[:, i])
+    return EL_results_interp# / max(PL_results)
 
 
 class ELPYMCModel(ModelBuilder):
@@ -153,15 +156,15 @@ class ELPYMCModel(ModelBuilder):
         return -(0.5) * np.sum(((data - model_data)/sigma) ** 2)
 
     def define_model_prior(self):
-        if self.model_config['number_free_parameters']== 3:
+        if self.model_config['number_free_parameters']== 2:
             E = pm.Uniform("E", self.model_config["E"]["min"], self.model_config["E"]["max"])
             k_EXCT = pm.Uniform("k_EXCT", self.model_config["k_EXCT"]["min"], self.model_config["k_EXCT"]["max"])
-            fosc_CT = pm.Uniform("fosc_CT", self.model_config["fosc_CT"]["min"], self.model_config["fosc_CT"]["max"])
-            theta = pt.as_tensor_variable([E, k_EXCT, fosc_CT])
-        elif self.model_config['number_free_parameters'] == 6:
+            #fosc_CT = pm.Uniform("fosc_CT", self.model_config["fosc_CT"]["min"], self.model_config["fosc_CT"]["max"])
+            theta = pt.as_tensor_variable([E, k_EXCT]) #, fosc_CT])
+        elif self.model_config['number_free_parameters'] == 5:
             E = pm.Uniform("E", self.model_config["E"]["min"], self.model_config["E"]["max"])
             k_EXCT = pm.Uniform("k_EXCT", self.model_config["k_EXCT"]["min"], self.model_config["k_EXCT"]["max"])
-            fosc_CT = pm.Uniform("fosc_CT", self.model_config["fosc_CT"]["min"], self.model_config["fosc_CT"]["max"])
+            #fosc_CT = pm.Uniform("fosc_CT", self.model_config["fosc_CT"]["min"], self.model_config["fosc_CT"]["max"])
             LI = pm.TruncatedNormal('LI', mu=self.model_config["LI"]["mu"], sigma=self.model_config["LI"]["sigma"],
                                         lower=self.model_config["LI"]["lower"],upper=self.model_config["LI"]["upper"])
             L0 = pm.TruncatedNormal('L0', mu=self.model_config["L0"]["mu"], sigma=self.model_config["L0"]["sigma"],
@@ -169,7 +172,7 @@ class ELPYMCModel(ModelBuilder):
             H0 = pm.TruncatedNormal('H0', mu=self.model_config["H0"]["mu"], sigma=self.model_config["H0"]["sigma"],
                                         lower=self.model_config["H0"]["lower"],upper=self.model_config["H0"]["upper"])
 
-            theta = pt.as_tensor_variable([E, k_EXCT, fosc_CT, LI, L0, H0])
+            theta = pt.as_tensor_variable([E, k_EXCT, LI, L0, H0])
         return theta
     
     def sample_model(self, **kwargs):
@@ -206,12 +209,12 @@ class ELPYMCModel(ModelBuilder):
         """
         model_config: Dict = {
             "number_free_parameters": 3,
-            "E": {"min": 1.0, "max": 1.4},
+            "E": {"min": 1.0, "max": 1.5},
             "k_EXCT": {"min": 8, "max": 12},
-            "fosc_CT": {"min": -4, "max": 0},
+            "fosc_CT": {"min": -2.4, "max": -2.2},
             "LI": {"mu": 0.12, "sigma": 0.01, "lower": 0.05, "upper": 0.15},
             "L0": {"mu": 0.12, "sigma": 0.01, "lower": 0.05, "upper": 0.15},
-            "H0": {"mu": 0.12, "sigma": 0.01, "lower": 0.12, "upper": 0.18},
+            "H0": {"mu": 0.15, "sigma": 0.01, "lower": 0.12, "upper": 0.18},
             "Temp_std_err": 2,
             "hws_std_err": 0.002,
             "relative_intensity_std_error": 0.1,
@@ -382,18 +385,20 @@ class ELPYMCModel(ModelBuilder):
 
         return model
 
-    def plot_trace(self, true_parameters, save_folder, savefig=True):
-        axes = az.plot_trace(
-            self.idata,
-            lines=[
-                ("E", {}, true_parameters[0]),
-                ("k_EXCT", {}, true_parameters[1]),
-                ("f_osc", {}, true_parameters[2]),
-                ("LI", {}, true_parameters[3]),
-                ("L0", {}, true_parameters[4]),
-                ("H0", {}, true_parameters[5]),
-            ],
-        )
+    def plot_trace(self, true_parameters=None, save_folder="", savefig=True):
+        if true_parameters is None:
+            axes = az.plot_trace(self.idata)
+        else:
+            axes = az.plot_trace(
+                self.idata,
+                lines=[
+                    ("E", {}, true_parameters[0]),
+                    ("k_EXCT", {}, true_parameters[1]),
+                    ("LI", {}, true_parameters[2]),
+                    ("L0", {}, true_parameters[3]),
+                    ("H0", {}, true_parameters[4]),
+                ],
+            )
         fig = axes.ravel()[0].figure
         fig.suptitle("Trace plot " + save_folder.split("/")[-1])
         fig.tight_layout()

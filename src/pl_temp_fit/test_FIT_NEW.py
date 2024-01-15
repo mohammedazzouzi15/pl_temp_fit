@@ -6,7 +6,7 @@ print(f"Running on PyMC v{pm.__version__}")
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-
+import datetime
 
 def main(
     num_samples=50,
@@ -30,8 +30,9 @@ def main(
     # generate the data
     true_parameters=[1.5, 0.02, 0.09, 0.1, 0.15]
     truemodel_pl, true_parameters = generate_data(temperature_list, hws, **model_config, true_parameters=true_parameters)
+    date = datetime.datetime.now().strftime("%Y_%m_%d")
     save_folder = (
-        "test_results_08_01/num_samples="
+        f"test_results_PL/{date}/num_samples="
         + str(num_samples)
         + " num_tune=" + str(num_tune)
         + " sigma=" + str(sigma)
@@ -43,6 +44,7 @@ def main(
     )
     os.makedirs(save_folder, exist_ok=True)
     true_model_pl_list,variance,arg_max_variance = plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_config, savefig=True, true_parameters=true_parameters)
+    variance = variance+ sigma # add min sigma to the variance
     ## initialise the model and run the fit
     model = PLPYMCModel.PLPYMCModel()
     for key, value in model_config.items():
@@ -156,9 +158,9 @@ def generate_parameter_list(
 
     parameter_list = []
     parameter_list.append({
-                "num_samples": 50,
-                "num_tune": 10,
-                "sigma": 0.0001,
+                "num_samples": 500,
+                "num_tune": 100,
+                "sigma": 0.01,
                 "temperature_list": np.array([300.0, 150.0, 80.0]),
                 "number_free_parameters": 2,
                 "Temp_std_err": 5,
@@ -212,7 +214,7 @@ if __name__ == "__main__":
 
     number_free_parameters = [5]
     Temp_std_err_list = [2,10,0.1]
-    hws_std_err_list = [0.001]
+    hws_std_err_list = [0.005,0.001]
     relative_intensity_std_error_list = [0.05,0.01]
 
     parameter_list = generate_parameter_list(
