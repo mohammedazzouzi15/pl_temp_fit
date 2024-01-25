@@ -40,7 +40,7 @@ def FCWD_v(State, const, hw, T):
     component1 = 1 / np.sqrt(4 * np.pi * State.Lo * const.kb * temp)
     component2 = np.exp(-hrf) * hrf ** (final_mat - initial_mat) * factorial(initial_mat) / factorial(final_mat)
     component3 = lagur**2
-    if type(State.Lo) is np.ndarray or type(State.Lo) is float:
+    if type(State.Lo) is np.ndarray or type(State.Lo) is float or type(State.Lo) is np.float64:
         component4 = np.exp(
             -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
             / (4 * State.Lo * const.kb * temp)
@@ -89,7 +89,7 @@ def FCWD_n(State, const, hw, T):
     component1 = 1 / np.sqrt(4 * np.pi * State.Lo * const.kb * temp)
     component2 = np.exp(-hrf) * hrf ** (final_mat - initial_mat) * factorial(initial_mat) / factorial(final_mat)
     component3 = lagur**2
-    if type(State.Lo) is np.ndarray or type(State.Lo) is float:
+    if type(State.Lo) is np.ndarray or type(State.Lo) is float or type(State.Lo) is np.float64:
         component4 = np.exp(
             -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
             / (4 * np.abs(State.Lo) * const.kb * temp)

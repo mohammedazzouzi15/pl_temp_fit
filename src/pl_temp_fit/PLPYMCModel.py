@@ -81,11 +81,11 @@ def pl_trial(theta, temperature_list, hws):
         H0=0.15,
         fosc=5,
     )
-    data.D.hw = np.arange(0.5, 4, 0.02)
+    data.D.hw = np.arange(0.5, 3, 0.02)
     data.D.T = temperature_list  # np.array([300.0, 150.0, 80.0])
     data.EX = LTPL.State(
         E=E,
-        vmhigh=5,
+        vmhigh=2,
         vmlow=15,
         sigma=sigma,
         numbrstates=20,
@@ -111,7 +111,7 @@ class PLPYMCModel(ModelBuilder):
     # And a version
     version = "0.1"
 
-    def build_model(self, X, y, sigma = 0.1, **kwargs):
+    def build_model(self, X, y, co_var_mat, **kwargs):
         """
         build_model creates the PyMC model
 
@@ -129,27 +129,32 @@ class PLPYMCModel(ModelBuilder):
         temperature_list=X['temperature_list']
         truemodel_pl = y
         hws=X['hws']
-        logl = LogLike(self.pl_loglike, truemodel_pl, sigma, temperature_list, hws)
+        inv_covar = np.linalg.inv(co_var_mat)
+        logl = LogLike(self.pl_loglike, truemodel_pl, inv_covar, temperature_list, hws)
         with pm.Model() as self.model:
             theta = self.define_model_prior()
 
             # use a Potential to "call" the Op and include it in the logp computation
             pm.Potential("likelihood", logl(theta))
        
-    def pl_loglike(self, theta, data, sigma, temperature_list, hws):
+    def pl_loglike(self, theta, data, inv_covar, temperature_list, hws):
         if type(theta) == np.ndarray:
             theta = theta.tolist()
         data = data/np.max(data.reshape(-1, 1))
         model_data = pl_trial(list(theta), temperature_list, hws)
         model_data = model_data/np.max(model_data.reshape(-1, 1))
-        if type(sigma) is not np.ndarray:
-            sigma = sigma * np.ones_like(model_data)
-        assert model_data.shape == sigma.shape
+        data = data.reshape(-1, 1)
+        model_data = model_data.reshape(-1, 1)
+        if type(inv_covar) is not np.ndarray:
+            print("co_var is not an array")
+            inv_covar = inv_covar * np.ones_like(model_data)
         # check that the data in model_data does not contain NaNs or infs
         if np.isnan(model_data).any() or np.isinf(model_data).any():
             print("NaN in model_data")
             return -np.inf
-        return -(0.5) * np.sum(((data - model_data)/sigma) ** 2)
+        
+        loglike = -0.5* np.sum((data-model_data).T*inv_covar*(data-model_data))
+        return loglike#-(0.5) * np.sum(((data - model_data)/sigma) ** 2)
 
     def define_model_prior(self):
         if self.model_config['number_free_parameters']== 2:
@@ -278,7 +283,7 @@ class PLPYMCModel(ModelBuilder):
         self,
         X: Dict,
         y: Optional[pd.Series] = None,
-        sigma: Optional[np.ndarray] = None,
+        co_var_mat: Optional[np.ndarray] = None,
         progressbar: bool = True,
         predictor_names: List[str] = None,
         random_seed: RandomState = None,
@@ -317,11 +322,11 @@ class PLPYMCModel(ModelBuilder):
         if predictor_names is None:
             predictor_names = []
         self._generate_and_preprocess_model_data(X, y)
-        if sigma is None:
-            self.sigma = 0.1
+        if co_var_mat is None:
+            self.co_var_mat = 0.1
         else:
-            self.sigma = sigma
-        self.build_model(self.X, self.y, self.sigma)
+            self.co_var_mat = co_var_mat
+        self.build_model(self.X, self.y, self.co_var_mat)
 
         sampler_config = self.sampler_config.copy()
         sampler_config["progressbar"] = progressbar
@@ -442,3 +447,4 @@ class PLPYMCModel(ModelBuilder):
         if savefig:
             fig.savefig(save_folder + "/posterior_mean.png")
         return fig
+    

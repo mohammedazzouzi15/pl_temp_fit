@@ -52,9 +52,9 @@ def main(
         model.model_config[key] = value
     print(model.model_config)      
     if number_free_parameters == 2:
-        model.sampler_config['step'] = "DEMetropolis(scaling=[0.1,1])"
+        model.sampler_config['step'] = "Metropolis(tune_interval =100)"
     else:
-        model.sampler_config['step'] = "DEMetropolis(scaling=[0.1,1,0.1,0.1,0.1])"#"[pm.DEMetropolis([self.E,self.LI,self.sigma_E]),pm.DEMetropolis([self.L0,self.H0])]"  
+        model.sampler_config['step'] = "Metropolis(tune_interval =100)"#"[pm.DEMetropolis([self.E,self.LI,self.sigma_E]),pm.DEMetropolis([self.L0,self.H0])]"  
     print(model.sampler_config)
     model.fit(X, truemodel_pl, sigma=variance, draws=num_samples, tune=num_tune, chains=4, step=model.sampler_config['step'] , return_inferencedata=True)
     print(az.summary(model.idata))

@@ -13,7 +13,7 @@ import datetime
 def main(
     num_samples=50,
     num_tune=10,
-    sigma=0.1,
+    sigma=0.001,
     data_file="data.csv",
     Temp_std_err=2,
     hws_std_err=0.002,
@@ -46,13 +46,14 @@ def main(
     )
     os.makedirs(save_folder, exist_ok=True)
     truemodel_pl, true_parameters = generate_data(temperature_list, hws, **model_config)
-    true_model_pl_list,variance,arg_max_variance = plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_config, savefig=True)
+    true_model_pl_list,variance,arg_max_variance,co_var_mat = plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_config, savefig=True)
     #shift the variance to the maximum of the experimental data
-    variance_data = variance.copy()
+    variance_data = co_var_mat.diagonal().reshape(hws.shape[0],-1).copy()#variance.copy()
     argmax_data = np.argmax(Exp_data, axis=0)
     for i in range(len(temperature_list)):
         variance_data[:, i] = np.roll(variance_data[:, i], argmax_data[i]-arg_max_variance[i])
     variance_data = variance_data+sigma
+    np.fill_diagonal(co_var_mat, variance_data.reshape(-1,1))
     plot_data_with_variance(Exp_data, temperature_list, hws, variance_data, save_folder)
 
     ## initialise the model and run the fit
@@ -60,10 +61,10 @@ def main(
     for key, value in model_config.items():
         model.model_config[key] = value
     print(model.model_config)  
-    model.sampler_config['step'] = "Metropolis(tune_interval =400)"    
+    model.sampler_config['step'] = "Metropolis(tune_interval =200)"    
     #model.sampler_config['step'] = "DEMetropolis(scaling=[0.1,0.01,0.1,0.1,0.1],tune_interval =200)"#"[pm.DEMetropolis([self.E,self.LI,self.sigma_E]),pm.DEMetropolis([self.L0,self.H0])]"  
     print(model.sampler_config)
-    model.fit(X, Exp_data,sigma = variance_data, draws=num_samples, tune=num_tune, chains=4, step=model.sampler_config['step'] , return_inferencedata=True)
+    model.fit(X, Exp_data,co_var_mat = co_var_mat, draws=num_samples, tune=num_tune, chains=4, step=model.sampler_config['step'] , return_inferencedata=True)
     print(az.summary(model.idata))
     model.plot_trace(true_parameters=None, save_folder=save_folder, savefig=True)
     # save the data
@@ -78,9 +79,8 @@ def main(
 def plot_data(
      truemodel_pl, temperature_list, hws,title="Experimental Data"
 ):
-    fig = plt.figure(constrained_layout=True,figsize=(15,10))
-    subfig =fig.subfigures(1,2)
-    ax = [subfig[0].subplots(1,1),subfig[1].subplots(1,1)]
+    fig,ax= plt.subplots(1,2, figsize=(10, 5))
+
     data_true_plot = truemodel_pl.reshape(len(hws), -1)/max(truemodel_pl.reshape(-1, 1))
     for i in range(len(temperature_list)):
 
@@ -108,7 +108,7 @@ def plot_data(
     fig.suptitle(title)
     ax[0].legend(ncol=len(temperature_list), bbox_to_anchor=(1,-0.1
                                                              ), loc='upper center')
-    fig.tight_layout()
+    return fig,ax
 
 
 def read_data(csv_file):
@@ -128,7 +128,7 @@ def read_data(csv_file):
 
 
 def plot_data_with_variance(
-     Exp_data, temperature_list, hws, variance_data, save_folder):
+     Exp_data, temperature_list, hws, variance_data, save_folder,savefig=False):
 
     fig, axes = plt.subplots(1,len(temperature_list), figsize=(20, 5))
 
@@ -157,7 +157,9 @@ def plot_data_with_variance(
         #ax.set_yscale('log')
         ax.set_ylim([1e-1, 1])
     fig.tight_layout()
-    fig.savefig(save_folder+"/data_with_variance.png")
+    if savefig:
+        fig.savefig(save_folder+"/data_with_variance.png")
+    return fig,axes
 
 
 #plot the generated data
@@ -169,7 +171,7 @@ def plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_
         truemodel_pl, true_parameters = generate_data(temperature_list, hws,**model_config, true_parameters=true_parameters)
         data_true_plot = truemodel_pl.reshape(len(hws), -1)
         data_true_plot = data_true_plot/max(data_true_plot.reshape(-1, 1))
-        true_model_pl_list.append(data_true_plot.reshape(len(hws), len(temperature_list)))
+        true_model_pl_list.append(data_true_plot.reshape(len(hws), len(temperature_list))+np.random.normal(0, 0.01, size=(len(hws), len(temperature_list))))
 
         for i in range(len(temperature_list)):
             ax[0].plot(
@@ -186,7 +188,9 @@ def plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_
     variance = np.var(np.array(true_model_pl_list), axis=0)
     mean_value_plot = np.mean(np.array(true_model_pl_list), axis=0)
     arg_max_variance = np.argmax(mean_value_plot, axis=0)
-
+    co_var = np.array(true_model_pl_list)
+    co_var = co_var.reshape(100,-1)
+    co_var_mat = np.cov(co_var[:,:].T)
     for i in range(len(temperature_list)):
         
         ax[1].plot(
@@ -211,7 +215,7 @@ def plot_generated_data(truemodel_pl, temperature_list, hws, save_folder, model_
 
     if savefig:
         fig.savefig(save_folder + "/generated_data.png")
-    return mean_value_plot,variance,arg_max_variance
+    return mean_value_plot,variance,arg_max_variance,co_var_mat,true_model_pl_list
 
 
 def generate_data(temperature_list, hws,sigma,Temp_std_err,hws_std_err,relative_intensity_std_error,number_free_parameters,true_parameters=None,**kwargs):
@@ -256,9 +260,9 @@ def generate_parameter_list(
 
     parameter_list = []
     parameter_list.append({
-                "num_samples": 100,
-                "num_tune": 20,
-                "sigma": 0.01,
+                "num_samples": 1000,
+                "num_tune": 1000,
+                "sigma": 0.001,
                 "Temp_std_err": 5,
                 "hws_std_err": 0.001,
                 "relative_intensity_std_error": 0.01,
@@ -301,7 +305,7 @@ if __name__ == "__main__":
     )
     test_number = argparser.parse_args().test_number
     print(f"Running test number {test_number}")
-    num_samples = [4000]
+    num_samples = [2000]
     num_tune = [2000]
     sigma = [0.01,0.002]
 
