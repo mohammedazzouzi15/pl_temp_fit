@@ -307,6 +307,8 @@ class hDFBackend_2(emcee.backends.HDFBackend):
                 g.attrs["random_state_{0}".format(i)] = v
 
             g.attrs["iteration"] = iteration + 1
+    def has_blobs(self):
+        return False
 
 # run the sampler
 
@@ -456,7 +458,7 @@ if __name__ == "__main__":
     print(f"Running test number {test_number}")
     sigma = [0.01,0.002]
     Temp_std_err_list = [2,10]
-    hws_std_err_list = [0.05,0.005]
+    hws_std_err_list = [0.005]
     relative_intensity_std_error_list = [0.1,0.01]
 
     parameter_list = generate_parameter_list(sigma,
