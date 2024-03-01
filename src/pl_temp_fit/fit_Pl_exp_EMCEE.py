@@ -240,7 +240,8 @@ def pl_loglike(theta, data, co_var_mat, temperature_list, hws):
 
 def log_probability(theta, data, inv_covar ,X):
     lp = log_prior(theta)
-    if lp<-1e10:
+    if lp == -np.inf:
+        #print("lp is -np.inf")
         return -np.inf
     log_like = pl_loglike(theta, data, inv_covar, X['temperature_list'], X['hws'])
     return lp + log_like
