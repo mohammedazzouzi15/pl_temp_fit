@@ -23,7 +23,7 @@ def plot_PL_data_with_variance(
      Exp_data, temperature_list, hws, variance_data, save_folder,savefig=False):
 
     fig, axes = plt.subplots(1,len(temperature_list), figsize=(20, 5))
-
+    Exp_data = Exp_data/max(Exp_data.reshape(-1, 1)) 
     for i in range(len(temperature_list)):
         ax=axes[i]
         ax.plot(
@@ -47,7 +47,7 @@ def plot_PL_data_with_variance(
         ax.set_ylabel("PL Intensity (arb. units)")
         ax.set_title("temperature="+str(temperature_list[i])+" K")
         #ax.set_yscale('log')
-        ax.set_ylim([1e-1, 1])
+        ax.set_ylim([0, 1])
     fig.tight_layout()
     if savefig:
         fig.savefig(save_folder+"/data_with_variance.png")

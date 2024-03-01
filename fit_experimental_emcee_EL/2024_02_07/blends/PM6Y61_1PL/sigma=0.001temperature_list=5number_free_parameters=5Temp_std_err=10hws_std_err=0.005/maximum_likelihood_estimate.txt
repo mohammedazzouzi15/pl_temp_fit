@@ -1,0 +1,8 @@
+Maximum likelihood estimates:
+  E_CT = 1.145
+  K_EXCT = 9.061
+  LI = 0.051
+  L0 = 0.032
+  H0 = 0.166
+  fosc_ct = -2.939
+Maximum log likelihood: 5565.79607226134

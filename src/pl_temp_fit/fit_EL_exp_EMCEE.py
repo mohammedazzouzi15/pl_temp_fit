@@ -23,50 +23,57 @@ def main(
     data_file_EL="data_EL.csv",
     Temp_std_err=2,
     hws_std_err=0.002,
-    relative_intensity_std_error=0.1,
+    relative_intensity_std_error_PL=0.1,
+    relative_intensity_std_error_EL=0.1,
+    LE_params = [1.37,1e-03,7.87e-02,1.1e-01, 1.59e-01],
+    coeff_spread = 10
 ):
     # import data and get model parameters
     number_free_parameters = 5
     Exp_data_PL, temperature_list_PL, hws_PL = Exp_data_utils.read_data(data_file_PL)
     Exp_data_EL, temperature_list_EL, hws_EL = Exp_data_utils.read_data(data_file_EL)
+    #initialise parameters for the model
+    number_free_parameters , sigma, Temp_std_err, hws_std_err, relative_intensity_std_error_PL,relative_intensity_std_error_EL = 5, 0.001, 10, 0.005, 0.05,0.1
 
     model_config = {
-        "number_free_parameters": number_free_parameters,
-        "sigma": sigma,
-        "Temp_std_err": Temp_std_err,
-        "hws_std_err": hws_std_err,
-        "relative_intensity_std_error": relative_intensity_std_error,
-    }
-    X = {'temperature_list':temperature_list_PL, 'hws':hws_PL}
+            "number_free_parameters": number_free_parameters,
+            "sigma": sigma,
+            "Temp_std_err": Temp_std_err,
+            "hws_std_err": hws_std_err,
+            "relative_intensity_std_error_PL": relative_intensity_std_error_PL,
+            "relative_intensity_std_error_EL": relative_intensity_std_error_EL,
+        }
+    X = {'temperature_list_PL':temperature_list_PL, 'hws_PL':hws_PL,
+        'temperature_list_EL':temperature_list_EL, 'hws_EL':hws_EL}
     print(f"size of hw is {hws_PL.shape}")
     print(f"size of temperature_list is {temperature_list_PL.shape}")
     date = datetime.datetime.now().strftime("%Y_%m_%d")
     # generate the data
     save_folder = (
-        f"fit_experimental_emcee_EL/{date}/{data_file_PL.split('/')[-1]}/"
-        + " sigma=" + str(sigma)
-        + " temperature_list=" + str(len(temperature_list_PL))
-        + " number_free_parameters=" + str(number_free_parameters)
-        + " Temp_std_err="+str(Temp_std_err)
-        + " hws_std_err="+str(hws_std_err)
-        + " relative_intensity_std_error="+str(relative_intensity_std_error)
+        f"fit_experimental_emcee_EL/{date}/{data_file_PL.split('/')[-1].split('.')[0]}/"
+        + "_sigma=" + str(sigma)
+        + "_temperature_list=" + str(len(temperature_list_PL))
+        + "_numb_parms=" + str(number_free_parameters)
+        + "_Temp_std_err="+str(Temp_std_err)
+        + "_hws_std_err="+str(hws_std_err)
+        + "_coeff_spread="+str(coeff_spread)
+    # + "relative_intensity_std_error_PL="+str(relative_intensity_std_error_PL)
+    # + "relative_intensity_std_error_EL="+str(relative_intensity_std_error_EL)
     )
     os.makedirs(save_folder, exist_ok=True)
     # get initial covariance matrix
     #get covariance matrix for the experimental data
-    init_params = [hws_PL[np.argmax(Exp_data_PL[:,0])], 0.02, 0.1, 0.1, 0.16]
-    co_var_mat_PL = plot_generated_data( temperature_list_PL, hws_PL, save_folder, model_config, savefig=True,true_parameters=init_params)
-    #plot data with variance
-    variance_data = co_var_mat_PL.diagonal().reshape(hws_PL.shape[0],-1).copy()
-    Exp_data_utils.plot_PL_data_with_variance(Exp_data_PL, temperature_list_PL, hws_PL, variance_data, save_folder)
+    #LE_params = [1.37,1e-03,7.87e-02,1.1e-01, 1.59e-01] # this needs to be set from the beginning
+    init_params = [hws_PL[np.argmax(Exp_data_PL[:,0])]-0.1, 10, 0.1, 0.1, 0.16,-2]
+    co_var_mat_PL,co_var_mat_EL,variance_EL,variance_PL= plot_generated_data(temperature_list_EL, hws_EL,temperature_list_PL,hws_PL, save_folder, model_config,LE_params, savefig=True,true_parameters=init_params)
+
     # get maximum likelihood estimate
-    soln = get_maximum_likelihood_estimate(Exp_data, co_var_mat,X,save_folder,init_params=init_params)
+    soln = get_maximum_likelihood_estimate( Exp_data_EL,Exp_data_PL, co_var_mat_PL,co_var_mat_EL ,X,save_folder,LE_params,init_params)
     # add noise to the data and plot it now with the fitted parameters
-    co_var_mat = plot_generated_data( temperature_list, hws, save_folder, model_config, savefig=True, true_parameters=soln.x)
-    variance_data = co_var_mat.diagonal().reshape(hws.shape[0],-1).copy()
-    Exp_data_utils.plot_PL_data_with_variance(Exp_data, temperature_list, hws, variance_data, save_folder)
+    co_var_mat_PL,co_var_mat_EL,variance_EL,variance_PL= plot_generated_data(temperature_list_EL, hws_EL,temperature_list_PL,hws_PL, save_folder, model_config,LE_params, savefig=True,true_parameters=soln.x)
+
     ## run the sampling
-    sampler = run_sampler_parallel(save_folder, soln, Exp_data, co_var_mat, X)
+    sampler = run_sampler_parallel(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL,LE_params, X,nsteps=100000,coeff_spread=coeff_spread)
     # plot the model data from the mean of the posterior   )
     return  sampler
 
@@ -285,7 +292,8 @@ def el_loglike( theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL, temperature
 
 def log_probability(theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL ,X,LE_params):
     lp = log_prior(theta,LE_params[0])
-    if not np.isfinite(lp):
+    if lp < -1e9:
+        print("log prior is -inf")
         return -np.inf
     log_like = el_loglike(theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL, X['temperature_list_EL'], X['hws_EL'],X['temperature_list_PL'], X['hws_PL'],LE_params)
     return lp + log_like
@@ -355,10 +363,10 @@ class hDFBackend_2(emcee.backends.HDFBackend):
         return False
 # run the sampler
 
-def run_sampler_parallel(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL,LE_params, X):
-    coords = soln.x + [1e-2,1e-1,1e-2,1e-2,1e-2,1e-1] * np.random.randn(32, 6)
+def run_sampler_parallel(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL,LE_params, X,nsteps = 10000,coeff_spread = 10):
+    coords = soln.x + [coeff_spread*1e-2,coeff_spread*1e-1,coeff_spread*1e-2,coeff_spread*1e-2,coeff_spread*1e-2,coeff_spread*1e-1] * np.random.randn(32, 6)
     nwalkers, ndim = coords.shape
-    nsteps = 10000
+    
     # Set up the backend
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
@@ -404,8 +412,10 @@ def run_sampler_parallel(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_
     return sampler
 
 
-def run_sampler_single(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL,LE_params, X,nsteps=10000):
-    coords = soln.x + [1e-2,1e-1,1e-2,1e-2,1e-2,1e-1] * np.random.randn(32, 6)
+def run_sampler_single(save_folder, soln, Exp_data_EL, Exp_data_PL,
+                        co_var_mat_EL, co_var_mat_PL,LE_params, X,nsteps=10000,    coeff_spread = 10):
+
+    coords = soln.x + [coeff_spread*1e-2,coeff_spread*1e-1,coeff_spread*1e-2,coeff_spread*1e-2,coeff_spread*1e-2,coeff_spread*1e-1] * np.random.randn(32, 6)   
     nwalkers, ndim = coords.shape
     # Set up the backend
     # Don't forget to clear it in case the file already exists
@@ -433,17 +443,21 @@ def run_sampler_single(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_EL
         # Compute the autocorrelation time so far
         # Using tol=0 means that we'll always get an estimate even
         # if it isn't trustworthy
-        tau = sampler.get_autocorr_time(tol=0)
-        autocorr[index] = np.mean(tau)
-        index += 1
-        print(tau)
-        # Check convergence
-        converged = np.all(tau * 100 < sampler.iteration)
-        converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-        if converged:
-            break
-        old_tau = tau
-        end = time.time()                                                               
+        try:
+            tau = sampler.get_autocorr_time(tol=0)
+            autocorr[index] = np.mean(tau)
+            index += 1
+            print(tau)
+            # Check convergence
+            converged = np.all(tau * 100 < sampler.iteration)
+            converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+            if converged:
+                break
+            old_tau = tau
+            end = time.time()
+        except Exception as e:
+            print(e)
+            print("error in the autocorrelation time")                                                           
     #sampler.sample(pos, iterations = nsteps, progress=True,store=True)
     end = time.time()
     multi_time = end - start
@@ -464,7 +478,8 @@ def generate_parameter_list(sigma,
                 "sigma": 0.001,
                 "Temp_std_err": 5,
                 "hws_std_err": 0.001,
-                "relative_intensity_std_error": 0.01,
+                "relative_intensity_std_error_PL": 0.01,
+                "relative_intensity_std_error_EL": 0.01,
             })
     for k, l, m, n in product(
         sigma,
@@ -477,7 +492,8 @@ def generate_parameter_list(sigma,
                 "sigma": k,
                 "Temp_std_err": l,
                 "hws_std_err": m,
-                "relative_intensity_std_error": n,
+                "relative_intensity_std_error_PL": n,
+                "relative_intensity_std_error_EL": n,
             }
         )
 
@@ -491,11 +507,24 @@ if __name__ == "__main__":
         "--test_number", type=int, default=0, help="test number to run"
     )
     argparser.add_argument(
-        "-d",
-        "--data_file",
+        "-dPL",
+        "--data_file_PL",
         type=str,
         default="data.csv",
         help="the data file",
+    )
+    argparser.add_argument(
+        "-dEL",
+        "--data_file_EL",
+        type=str,
+        default="data.csv",
+        help="the data file",
+    )
+    argparser.add_argument(
+        "--coeff_spread",
+        type=int,
+        default=10,
+        help="the spread of the coefficient"
     )
     test_number = argparser.parse_args().test_number
     print(f"Running test number {test_number}")
@@ -512,4 +541,7 @@ if __name__ == "__main__":
     print(parameter_list[test_number])
     print(len(parameter_list))
     #parameter_list[test_number]["test_number"] = test_number
-    main(data_file=argparser.parse_args().data_file,**parameter_list[test_number])  # run the example
+    main(data_file_PL=argparser.parse_args().data_file_PL,
+         data_file_EL=argparser.parse_args().data_file_EL,
+         coeff_spread=argparser.parse_args().coeff_spread,
+         **parameter_list[test_number])  # run the example

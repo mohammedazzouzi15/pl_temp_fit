@@ -40,18 +40,18 @@ def main(
     date = datetime.datetime.now().strftime("%Y_%m_%d")
     # generate the data
     save_folder = (
-        f"fit_experimental_emcee/{date}/{data_file.split('/')[-1]}/"
-        + " sigma=" + str(sigma)
-        + " temperature_list=" + str(len(temperature_list))
-        + " number_free_parameters=" + str(number_free_parameters)
-        + " Temp_std_err="+str(Temp_std_err)
-        + " hws_std_err="+str(hws_std_err)
-        + " relative_intensity_std_error="+str(relative_intensity_std_error)
+        f"fit_experimental_emcee/{date}/{data_file.replace('.csv','').split('/')[-1]}/"
+        + "_sigma=" + str(sigma)
+        + "_TempList=" + str(len(temperature_list))
+        + "_FreeParams=" + str(number_free_parameters)
+        + "_TempStdErr="+str(Temp_std_err)
+        + "_hwsStdErr="+str(hws_std_err)
+        + "_relIntStdError="+str(relative_intensity_std_error)
     )
     os.makedirs(save_folder, exist_ok=True)
     # get initial covariance matrix
     #get covariance matrix for the experimental data
-    init_params = [hws[np.argmax(Exp_data[:,0])], 0.02, 0.1, 0.1, 0.16]
+    init_params = [hws[np.argmax(Exp_data[:,0])]+0.1, 0.02, 0.1, 0.1, 0.16]
     co_var_mat = plot_generated_data( temperature_list, hws, save_folder, model_config, savefig=True,true_parameters=init_params)
     #plot data with variance
     variance_data = co_var_mat.diagonal().reshape(hws.shape[0],-1).copy()
@@ -222,7 +222,7 @@ def log_prior(theta):
     return -np.inf
 
 
-def pl_loglike( theta, data, co_var_mat, temperature_list, hws):
+def pl_loglike(theta, data, co_var_mat, temperature_list, hws):
     data = data/np.max(data.reshape(-1, 1))
     model_data = pl_trial(list(theta), temperature_list, hws)
     model_data = model_data/np.max(model_data.reshape(-1, 1))
@@ -240,7 +240,7 @@ def pl_loglike( theta, data, co_var_mat, temperature_list, hws):
 
 def log_probability(theta, data, inv_covar ,X):
     lp = log_prior(theta)
-    if not np.isfinite(lp):
+    if lp<-1e10:
         return -np.inf
     log_like = pl_loglike(theta, data, inv_covar, X['temperature_list'], X['hws'])
     return lp + log_like
