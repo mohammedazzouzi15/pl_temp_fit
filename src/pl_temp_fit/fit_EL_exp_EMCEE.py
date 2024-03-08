@@ -14,6 +14,7 @@ from pl_temp_fit import LTL
 from scipy.optimize import minimize
 from multiprocessing import Pool
 import time
+import json
 
 
 
@@ -65,6 +66,12 @@ def main(
     #get covariance matrix for the experimental data
     #LE_params = [1.37,1e-03,7.87e-02,1.1e-01, 1.59e-01] # this needs to be set from the beginning
     init_params = [hws_PL[np.argmax(Exp_data_PL[:,0])]-0.1, 10, 0.1, 0.1, 0.16,-2]
+    model_config_save = model_config.copy()
+    model_config_save["init_params"] = init_params
+    model_config_save["LE_params"] = LE_params
+    with open(save_folder + "/model_config.json", "w") as f:
+        json.dump(model_config_save, f)
+
     co_var_mat_PL,co_var_mat_EL,variance_EL,variance_PL= plot_generated_data(temperature_list_EL, hws_EL,temperature_list_PL,hws_PL, save_folder, model_config,LE_params, savefig=True,true_parameters=init_params)
 
     # get maximum likelihood estimate
@@ -177,32 +184,45 @@ def generate_data(temperature_list_EL, hws_EL,temperature_list_PL,hws_PL,LE_para
     return model_data_PL,model_data_EL, true_parameters
 
 
-def get_maximum_likelihood_estimate( Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL,X,save_folder,LE_params,init_params):
+def get_maximum_likelihood_estimate(Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL,X,save_folder,LE_params,init_params,coeff_spread = 3,
+    num_coords = 5):
     nll = lambda *args: -el_loglike(*args)
-    soln = minimize(nll, init_params, args=( Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL, X['temperature_list_EL'], X['hws_EL'],X['temperature_list_PL'], X['hws_PL'],LE_params)
-                    ,bounds=((1,2),(8,12),(0.03,0.2),(0.03,0.2),(0.1,0.2),(-4,-1)),tol=1e-3)
-    print(soln.x)
+
+    coords = init_params+ [coeff_spread*1e-2,coeff_spread*1e-1,coeff_spread*1e-2,coeff_spread*1e-2,coeff_spread*1e-2,coeff_spread*1e-1] * np.random.randn(num_coords, 6)
+    min_fun = np.inf
+    print('running the minimisation')
+    for i,coord in enumerate(coords):
+        print(f'step {i}')
+        soln = minimize(nll, coord, args=( Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL, X['temperature_list_EL'], X['hws_EL'],X['temperature_list_PL'], X['hws_PL'],LE_params)
+                        ,bounds=((1,2),(8,12),(0.03,0.2),(0.03,0.2),(0.1,0.2),(-4,-1)),tol=1e-3)
+        if 'NORM_OF_PROJECTED_GRADIENT_' in soln.message:
+            print('NORM_OF_PROJECTED_GRADIENT_')
+            continue
+        if soln.fun<min_fun:
+            min_fun = soln.fun
+            soln_min = soln
+    print(soln_min.x)
     print("Maximum likelihood estimates:")
-    print(f"  E_CT = {soln.x[0]:.3f}")
-    print(f"  K_EXCT = {soln.x[1]:.3f}")
-    print(f"  LI = {soln.x[2]:.3f}")
-    print(f"  L0 = {soln.x[3]:.3f}")
-    print(f"  H0 = {soln.x[4]:.3f}")
-    print(f"  fosc_ct = {soln.x[5]:.3f}")
+    print(f"  E_CT = {soln_min.x[0]:.3f}")
+    print(f"  K_EXCT = {soln_min.x[1]:.3f}")
+    print(f"  LI = {soln_min.x[2]:.3f}")
+    print(f"  L0 = {soln_min.x[3]:.3f}")
+    print(f"  H0 = {soln_min.x[4]:.3f}")
+    print(f"  fosc_ct = {soln_min.x[5]:.3f}")
 
     print("Maximum log likelihood:", soln.fun)
     # print those into a file
     with open(save_folder+"/maximum_likelihood_estimate.txt", "w") as f:
         f.write("Maximum likelihood estimates:\n")
-        f.write(f"  E_CT = {soln.x[0]:.3f}\n")
-        f.write(f"  K_EXCT = {soln.x[1]:.3f}\n")
-        f.write(f"  LI = {soln.x[2]:.3f}\n")
-        f.write(f"  L0 = {soln.x[3]:.3f}\n")
-        f.write(f"  H0 = {soln.x[4]:.3f}\n")
-        f.write(f"  fosc_ct = {soln.x[5]:.3f}\n")
+        f.write(f"  E_CT = {soln_min.x[0]:.3f}\n")
+        f.write(f"  K_EXCT = {soln_min.x[1]:.3f}\n")
+        f.write(f"  LI = {soln_min.x[2]:.3f}\n")
+        f.write(f"  L0 = {soln_min.x[3]:.3f}\n")
+        f.write(f"  H0 = {soln_min.x[4]:.3f}\n")
+        f.write(f"  fosc_ct = {soln_min.x[5]:.3f}\n")
 
-        f.write(f"Maximum log likelihood: {soln.fun}\n")
-    return soln
+        f.write(f"Maximum log likelihood: {soln_min.fun}\n")
+    return soln_min
 
 
 
@@ -278,7 +298,7 @@ def el_loglike( theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL, temperature
     data_PL = data_PL.reshape(-1, 1)
     # check that the data in model_data does not contain NaNs or infs
     if np.isnan(model_data_EL).any() or np.isinf(model_data_EL).any():
-        print("NaN in model_data")
+        #print("NaN in model_data")
         return -np.inf
     diff_EL = data_EL - model_data_EL
     diff_EL[np.abs(diff_EL) < 1e-4] = 0
@@ -292,13 +312,74 @@ def el_loglike( theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL, temperature
 
 def log_probability(theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL ,X,LE_params):
     lp = log_prior(theta,LE_params[0])
-    if lp < -1e9:
-        print("log prior is -inf")
+    if lp == -np.inf:
         return -np.inf
     log_like = el_loglike(theta, data_EL,data_PL, co_var_mat_EL,co_var_mat_PL, X['temperature_list_EL'], X['hws_EL'],X['temperature_list_PL'], X['hws_PL'],LE_params)
-    return lp + log_like
+    log_prob = lp + log_like[0]
+
+    #print(f"log_prob is {log_prob}")
+    #assert log_prob is a float
+    if np.isnan(log_like):
+        return -np.inf
+    if np.isinf(log_like):
+        return -np.inf
+    if log_prob is None:
+
+        return -np.inf
+    assert log_prob.dtype.kind == 'f', f"the log_prob is not a float but a {type(log_prob)}"
+
+    return log_prob
 
 
+class ensemble_sampler(emcee.EnsembleSampler):
+    """ workaround the issues with blobs from the sampler"""
+    def compute_log_prob(self, coords):
+        """Calculate the vector of log-probability for the walkers
+
+        Args:
+            coords: (ndarray[..., ndim]) The position vector in parameter
+                space where the probability should be calculated.
+
+        This method returns:
+
+        * log_prob: A vector of log-probabilities with one entry for each
+          walker in this sub-ensemble.
+        * blob: The list of meta data returned by the ``log_post_fn`` at
+          this position or ``None`` if nothing was returned.
+
+        """
+        p = coords
+
+        # Check that the parameters are in physical ranges.
+        if np.any(np.isinf(p)):
+            raise ValueError("At least one parameter value was infinite")
+        if np.any(np.isnan(p)):
+            raise ValueError("At least one parameter value was NaN")
+
+        # If the parmaeters are named, then switch to dictionaries
+        if self.params_are_named:
+            p = ndarray_to_list_of_dicts(p, self.parameter_names)
+
+        # Run the log-probability calculations (optionally in parallel).
+        if self.vectorize:
+            results = self.log_prob_fn(p)
+        else:
+            # If the `pool` property of the sampler has been set (i.e. we want
+            # to use `multiprocessing`), use the `pool`'s map method.
+            # Otherwise, just use the built-in `map` function.
+            if self.pool is not None:
+                map_func = self.pool.map
+            else:
+                map_func = map
+            results = list(map_func(self.log_prob_fn, p))
+
+            log_prob = np.array([float(l) for l in results])
+
+        # Check for log_prob returning NaN.
+        if np.any(np.isnan(log_prob)):
+            raise ValueError("Probability function returned NaN")
+
+        return log_prob, None
 
 
 class hDFBackend_2(emcee.backends.HDFBackend):
@@ -383,7 +464,7 @@ def run_sampler_parallel(save_folder, soln, Exp_data_EL,Exp_data_PL, co_var_mat_
     # Here are the important lines
 
     with Pool() as pool:
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args=(Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL, X,LE_params),pool=pool,backend=backend) 
+        sampler = ensemble_sampler(nwalkers, ndim, log_probability, args=(Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL, X,LE_params),pool=pool,backend=backend) 
         start = time.time()
         # Now we'll sample for up to max_n steps
         for sample in sampler.sample(coords, iterations=nsteps,blobs0=[]):
@@ -432,7 +513,7 @@ def run_sampler_single(save_folder, soln, Exp_data_EL, Exp_data_PL,
 
     # Here are the important lines
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args=( Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL, X,LE_params),backend=backend) 
+    sampler = ensemble_sampler(nwalkers, ndim, log_probability, args=( Exp_data_EL,Exp_data_PL, co_var_mat_EL,co_var_mat_PL, X,LE_params),backend=backend) 
     start = time.time()
     # Now we'll sample for up to max_n steps
     for sample in sampler.sample(coords, iterations=nsteps, progress=True,blobs0=[]):

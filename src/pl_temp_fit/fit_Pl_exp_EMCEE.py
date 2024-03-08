@@ -244,7 +244,10 @@ def log_probability(theta, data, inv_covar ,X):
         #print("lp is -np.inf")
         return -np.inf
     log_like = pl_loglike(theta, data, inv_covar, X['temperature_list'], X['hws'])
-    return lp + log_like
+    log_prob = lp + log_like[0]
+    #assert log_prob is a float
+    assert isinstance(log_prob, float)
+    return log_prob
 
 
 
