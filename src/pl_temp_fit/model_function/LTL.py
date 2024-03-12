@@ -132,7 +132,6 @@ class State:
     def update(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-        
         self.DG0 = self.calculate_DG0()
         self.u = self.calculate_u()
         self.calculate_fosc()

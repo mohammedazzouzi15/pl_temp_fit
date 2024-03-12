@@ -309,6 +309,7 @@ def plot_exp_data_with_variance(
     Exp_data_PL,
     Exp_data_EL,
 ):
+    
     model_data_EL, model_data_PL = generate_data_utils.el_trial(
         temperature_list_EL,
         hws_EL,

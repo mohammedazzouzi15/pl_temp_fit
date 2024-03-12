@@ -216,7 +216,6 @@ def el_trial(
         EL_results_interp[:, i] = np.interp(
             hws_EL, data.D.hw, EL_results[:, i]
         )
-
     data.D.Luminecence_exp = "PL"
     data.D.T = temperature_list_PL  # np.array([300.0, 150.0, 80.0])
     LTL.LTLCalc(data)
@@ -268,10 +267,11 @@ def el_loglike(
             for id, key2 in enumerate(params_to_fit[key].keys()):
                 params_to_fit_updated[key][key2] = theta[counter]
                 counter += 1
-
+        
     except Exception as e:
         print(e)
         raise ValueError("The parameters to fit are not in the correct format")
+    
     model_data_EL, model_data_PL = el_trial(
         temperature_list_EL,
         hws_EL,
