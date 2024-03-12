@@ -1,7 +1,7 @@
 from pl_temp_fit.Emcee_utils import ensemble_sampler, hDFBackend_2
 import time
 from scipy.optimize import minimize
-from pl_temp_fit import covariance_utils, generate_data_utils, LTL, Exp_data_utils
+from pl_temp_fit import  generate_data_utils,  Exp_data_utils
 import numpy as np
 from multiprocessing import Pool
 

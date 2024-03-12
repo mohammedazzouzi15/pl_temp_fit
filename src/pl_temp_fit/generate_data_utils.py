@@ -1,6 +1,6 @@
 from scipy.optimize import minimize
 import numpy as np
-from pl_temp_fit import LTL
+from pl_temp_fit.model_function import LTL
 import os
 
 

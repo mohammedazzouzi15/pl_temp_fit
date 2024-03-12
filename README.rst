@@ -42,9 +42,8 @@ pl_temp_fit
 Note
 ====
 to install the package,
- first install pymc 
- conda create -c conda-forge -n pymc_env "pymc>=5"
-conda activate pymc_env
+conda create -n pl_temp_fit python=3.8
+conda activate pl_temp_fit
 pip install -e . # on the folder where pyproject.toml is located
 
 for an example of the workflow you can check the notebook in the examples folder
