@@ -290,6 +290,8 @@ def plot_exp_data_with_variance(
     fixed_parameters_dict,
     true_parameters,
     Exp_data_PL,
+    fig=None,
+    axis=None,
 ):
     model_data_PL = generate_data_utils.pl_trial(
         temperature_list_PL,
@@ -298,9 +300,10 @@ def plot_exp_data_with_variance(
         true_parameters,
     )
     truemodel_pl = model_data_PL / np.max(model_data_PL.reshape(-1, 1))
-    fig, axis = Exp_data_utils.plot_PL_data_with_variance(
-        Exp_data_PL, temperature_list_PL, hws_PL, variance_PL, save_folder
-    )
+    if fig is None:
+        fig, axis = Exp_data_utils.plot_PL_data_with_variance(
+            Exp_data_PL, temperature_list_PL, hws_PL, variance_PL, save_folder
+        )
 
     for i, axes in enumerate(axis):
         axes.plot(hws_PL, truemodel_pl[:, i], label="fit", color="C" + str(i))

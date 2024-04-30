@@ -51,9 +51,9 @@ class Data:
             sigma=0.02,
             numbrstates=20,
             off=0,
-            LI=0.1,
-            L0=0.1,
-            H0=0.15,
+            Li=0.1,  # Fix: Changed 'LI' to 'Li'
+            Lo=0.1,
+            hO=0.15,
             fosc=5,
         )
         self.CT = State(
@@ -63,9 +63,9 @@ class Data:
             sigma=0.01,
             numbrstates=20,
             off=1,
-            LI=0.1,
-            L0=0.1,
-            H0=0.15,
+            Li=0.1,  # Fix: Changed 'LI' to 'Li'
+            Lo=0.1,
+            hO=0.15,
             fosc=5,
         )
         self.D = DataParams()
