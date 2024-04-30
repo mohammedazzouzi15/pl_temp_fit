@@ -88,9 +88,9 @@ class State:
         sigma,
         numbrstates,
         off,
-        LI=0.1,
-        L0=0.1,
-        H0=0.15,
+        Li=0.1,
+        Lo=0.1,
+        hO=0.15,
         fosc=0.5,
         dmus=3.0,
     ):
@@ -110,9 +110,9 @@ class State:
         self.Sum = None
         self.off = off
         self.DG0 = self.calculate_DG0()
-        self.hO = H0  # vibronic mode energy
-        self.Li = LI  # high frequency reorganization energy
-        self.Lo = L0  # low frequency reorganization energy
+        self.hO = hO  # vibronic mode energy
+        self.Li = Li  # high frequency reorganization energy
+        self.Lo = Lo  # low frequency reorganization energy
         self.fosc = fosc
         self.dmus = dmus
         self.u = self.calculate_u()

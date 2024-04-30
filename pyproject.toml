@@ -14,9 +14,9 @@ dependencies = [
     "scipy",
     "ipykernel",
     "emcee",
-    "openpxyl",
     "pandas",
-    
+    "h5py",
+    "openpyxl",
 ]
 requires-python = ">=3.7"
 dynamic = ["version"]
