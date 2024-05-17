@@ -1,7 +1,7 @@
 from pl_temp_fit.Emcee_utils import ensemble_sampler, hDFBackend_2
 import time
 from scipy.optimize import minimize
-from pl_temp_fit import  generate_data_utils,  Exp_data_utils
+from pl_temp_fit import generate_data_utils, Exp_data_utils
 import numpy as np
 from multiprocessing import Pool
 
@@ -148,7 +148,6 @@ def run_sampler_single(
             max_bound,
         ),
         backend=backend,
-
     )
     start = time.time()
     # Now we'll sample for up to max_n steps
@@ -197,6 +196,7 @@ def run_sampler_parallel(
     nsteps=10000,
     coeff_spread=10,
     num_coords=32,
+    num_processes=None,
 ):
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
@@ -218,7 +218,7 @@ def run_sampler_parallel(
     # Set up the backend
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
-    backend = hDFBackend_2(filename, name="single_core")
+    backend = hDFBackend_2(filename, name="multi_core")
     backend.reset(nwalkers, ndim)
     print("Initial size: {0}".format(backend.iteration))
 
@@ -229,7 +229,14 @@ def run_sampler_parallel(
     old_tau = np.inf
 
     # Here are the important lines
-    with Pool() as pool:
+    if num_processes is None:
+        import multiprocessing
+
+        num_processes = multiprocessing.cpu_count()
+        print(f"num_processes = {num_processes}")
+
+    with Pool(processes=num_processes) as pool:
+
         sampler = ensemble_sampler(
             nwalkers,
             ndim,
@@ -245,7 +252,6 @@ def run_sampler_parallel(
             ),
             backend=backend,
             pool=pool,
-
         )
         start = time.time()
         # Now we'll sample for up to max_n steps
@@ -277,7 +283,7 @@ def run_sampler_parallel(
         # sampler.sample(pos, iterations = nsteps, progress=True,store=True)
         end = time.time()
         multi_time = end - start
-        print("single process took {0:.1f} seconds".format(multi_time))
+        print("multi process took {0:.1f} seconds".format(multi_time))
         # print("{0:.1f} times faster than serial".format(serial_time / multi_time))
     return sampler
 
@@ -314,7 +320,7 @@ def plot_exp_data_with_variance(
     return fig, axis
 
 
-def get_param_dict(params_to_fit_init,true_params_list):
+def get_param_dict(params_to_fit_init, true_params_list):
 
     true_parameters = {
         "EX": {},
