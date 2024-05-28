@@ -335,7 +335,7 @@ def log_probability(
         fixed_parameters_dict,
         params_to_fit,
     )
-    log_prob = lp + log_like[0]
+    log_prob = lp + log_like
 
     # print(f"log_prob is {log_prob}")
     # assert log_prob is a float
@@ -417,7 +417,7 @@ def log_probability_PL(
         fixed_parameters_dict,
         params_to_fit,
     )
-    log_prob = lp + log_like[0]
+    log_prob = lp + log_like
 
     # print(f"log_prob is {log_prob}")
     # assert log_prob is a float

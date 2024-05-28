@@ -10,7 +10,7 @@ from pl_temp_fit import (
 def main(model_config_id):
     model_config, model_config_save = config_utils.load_model_config(
         model_config_id,
-        database_folder="/rds/general/user/ma11115/home/pl_temp_fit/fit_experimental_emcee_PL/fit_data_base/",
+        database_folder=("/rds/general/user/hy2120/home/pl_temp_fit/fit_experimental_emcee_PL/fit_data_base/"),
     )
 
     csv_name_PL = model_config_save["csv_name_PL"]
@@ -68,7 +68,7 @@ def main(model_config_id):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Run the EL sample fitting")
+    parser = argparse.ArgumentParser(description="Run the PL sample fitting")
     parser.add_argument(
         "--model_config_id",
         type=str,

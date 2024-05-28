@@ -25,8 +25,8 @@ def save_model_config(
     coeff_spread=0.5,
     nsteps=10000,
     num_coords=32,
-    database_folder="fit_experimental_emcee_EL/fit_data_base/",
-    data_folder="fit_experimental_emcee_EL/fit_data/",
+    database_folder="fit_experimental_emcee_PL/fit_data_base/",
+    data_folder="fit_experimental_emcee_PL/fit_data/",
 ):
     model_config = {
         "Temp_std_err": Temp_std_err,
@@ -46,7 +46,7 @@ def save_model_config(
     # generate the data
     save_folder = (
         data_folder
-        + f"/{date}/{csv_name_PL.split('/')[-1].split('.')[0]}/"
+        +  f"/{date}/{csv_name_PL.split('/')[-1].split('.')[0]}/"
         + test_id
     )
 
@@ -86,7 +86,7 @@ def save_model_config(
 
 def load_model_config(
     test_id,
-    database_folder="/rds/general/user/ma11115/home/pl_temp_fit/fit_experimental_emcee_EL/fit_data_base/",
+    database_folder="/rds/general/user/hy2120/home/pl_temp_fit/fit_experimental_emcee_PL/fit_data_base/",
 ):
     with open(database_folder + f"/{test_id}.json", "r") as f:
         model_config_save = json.load(f)

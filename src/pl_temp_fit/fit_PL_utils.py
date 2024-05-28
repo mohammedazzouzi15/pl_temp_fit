@@ -221,7 +221,7 @@ def run_sampler_parallel(
     backend = hDFBackend_2(filename, name="multi_core")
     backend.reset(nwalkers, ndim)
     print("Initial size: {0}".format(backend.iteration))
-
+    print(num_parameters)
     # We'll track how the average autocorrelation time estimate changes
     index = 0
     autocorr = np.empty(nsteps)
