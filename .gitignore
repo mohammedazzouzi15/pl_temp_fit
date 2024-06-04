@@ -59,5 +59,6 @@ fit_results/*
 .conda*/
 .python-version
 *.png
-fit_experimental_emcee_PL/fit_data_base/43fd566a-024e-4648-8073-568274c8da7a.json
 *.h5
+fit_experimental_emcee_PL/fit_data_base/*.json
+fit_experimental_emcee_PL/fit_data/*/*/*/*/maximum_likelihood_estimate.txt

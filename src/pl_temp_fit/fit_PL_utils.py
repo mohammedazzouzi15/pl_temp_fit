@@ -4,6 +4,7 @@ from scipy.optimize import minimize
 from pl_temp_fit import generate_data_utils, Exp_data_utils
 import numpy as np
 from multiprocessing import Pool
+import os
 
 
 def get_maximum_likelihood_estimate(
@@ -101,7 +102,9 @@ def run_sampler_single(
     nsteps=10000,
     coeff_spread=10,
     num_coords=32,
+    restart_sampling=True,
 ):
+
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:
@@ -123,7 +126,9 @@ def run_sampler_single(
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
     backend = hDFBackend_2(filename, name="single_core")
-    backend.reset(nwalkers, ndim)
+
+    if restart_sampling:
+        backend.reset(nwalkers, ndim)
     print("Initial size: {0}".format(backend.iteration))
 
     # We'll track how the average autocorrelation time estimate changes
@@ -197,7 +202,10 @@ def run_sampler_parallel(
     coeff_spread=10,
     num_coords=32,
     num_processes=None,
+    restart_sampling=True,
 ):
+    #import emcee
+
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:
@@ -219,7 +227,9 @@ def run_sampler_parallel(
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
     backend = hDFBackend_2(filename, name="multi_core")
-    backend.reset(nwalkers, ndim)
+    #backend = emcee.backends.HDFBackend(filename, name="multi_core")
+    if restart_sampling or os.path.isfile(filename) == False:
+        backend.reset(nwalkers, ndim)
     print("Initial size: {0}".format(backend.iteration))
 
     # We'll track how the average autocorrelation time estimate changes
