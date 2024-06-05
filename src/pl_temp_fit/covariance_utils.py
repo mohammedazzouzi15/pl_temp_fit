@@ -243,7 +243,7 @@ def plot_generated_data_PL(
     true_model_el_list = []
 
     for x in range(numnber_of_samples):
-        model_data_PL = generate_data_utils.generate_data_PL(
+        model_data_PL,EX_kr, Ex_knr  = generate_data_utils.generate_data_PL(
             **model_config,
             params_to_fit=params_to_fit,
             fixed_parameters_dict=fixed_parameters_dict,
@@ -287,7 +287,7 @@ def get_covariance_matrix_for_data_PL(
 ):
     true_model_pl_list = []
     for x in range(numnber_of_samples):
-        model_data_PL = generate_data_utils.generate_data_PL(
+        model_data_PL,EX_kr, Ex_knr  = generate_data_utils.generate_data_PL(
             **model_config,
             params_to_fit=params_to_fit,
             fixed_parameters_dict=fixed_parameters_dict,

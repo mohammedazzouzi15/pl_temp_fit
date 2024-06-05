@@ -63,6 +63,7 @@ def main(model_config_id):
         nsteps=model_config_save["nsteps"],
         coeff_spread=model_config_save["coeff_spread"],
         num_coords=model_config_save["num_coords"],
+        restart_sampling=False,
     )
 
 
