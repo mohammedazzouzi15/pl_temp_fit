@@ -234,6 +234,8 @@ def run_sampler_parallel(
     else:
         reader = emcee.backends.HDFBackend(filename, name="multi_core")
         coords = reader.get_last_sample().coords
+        # add a little noise to the initial position
+        coords += 1e-3 * np.random.randn(*coords.shape)
     if coords.shape[0] != nwalkers:
         raise ValueError(
             "invalid coordinate dimensions; expected {0}".format(
@@ -312,6 +314,38 @@ def run_sampler_parallel(
         print("multi process took {0:.1f} seconds".format(multi_time))
         # print("{0:.1f} times faster than serial".format(serial_time / multi_time))
     return sampler
+
+
+def plot_exp_data_with_variance(
+    temperature_list_PL,
+    hws_PL,
+    variance_PL,
+    save_folder,
+    fixed_parameters_dict,
+    true_parameters,
+    Exp_data_PL,
+    fig=None,
+    axis=None,
+):
+    model_data_PL, EX_kr, Ex_knr = generate_data_utils.pl_trial(
+        temperature_list_PL,
+        hws_PL,
+        fixed_parameters_dict,
+        true_parameters,
+    )
+    truemodel_pl = model_data_PL / np.max(model_data_PL.reshape(-1, 1))
+    if fig is None:
+        fig, axis = Exp_data_utils.plot_PL_data_with_variance(
+            Exp_data_PL, temperature_list_PL, hws_PL, variance_PL, save_folder
+        )
+
+    for i, axes in enumerate(axis):
+        axes.plot(hws_PL, truemodel_pl[:, i], label="fit", color="C" + str(i))
+        axes.legend()
+        axes.set_ylim(0, 1.1)
+    fig.suptitle("PL")
+    fig.tight_layout(h_pad=0.0)
+    return fig, axis
 
 
 def plot_exp_data_with_variance(
