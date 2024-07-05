@@ -276,6 +276,8 @@ def plot_generated_data_PL(
     )
     # plot the generated data
     if savefig:
+        import os
+        os.makedirs(save_folder, exist_ok=True)
         fig.savefig(save_folder + "/generated_data.png")
     fig.tight_layout()
     return co_var_mat_test_PL, variance_PL

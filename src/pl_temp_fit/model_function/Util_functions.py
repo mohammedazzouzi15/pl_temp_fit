@@ -40,25 +40,15 @@ def FCWD_v(State, const, hw, T):
     component1 = 1 / np.sqrt(4 * np.pi * State.Lo * const.kb * temp)
     component2 = np.exp(-hrf) * hrf ** (final_mat - initial_mat) * factorial(initial_mat) / factorial(final_mat)
     component3 = lagur**2
-    if type(State.Lo) is np.ndarray or type(State.Lo) is float or type(State.Lo) is np.float64:
-        component4 = np.exp(
-            -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
-            / (4 * State.Lo * const.kb * temp)
-        )
-    else:
-        import pymc as pm
-        component4 = pm.math.exp(
-            -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
-            / (4 * State.Lo * np.array([const.kb]) * temp)
-        )
+    component4 = np.exp(
+        -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
+        / (4 * State.Lo * const.kb * temp)
+    )
     component5 = np.exp((-initial_mat * State.hO) / (np.array([const.kb]) * temp))
     component6 = np.exp((-dg0_mat) / (np.array([const.kb])* temp))
     FCWD_n = component1 * component2 * component3 * component4 * component5 * component6 
-    if type(FCWD_n) is np.ndarray:
-        FCWD_dw = np.sum(FCWD_n, axis=(3, 4))
-    else:
-        from pymc import math
-        FCWD_dw = math.sum(FCWD_n, axis=(3, 4))
+    FCWD_dw = np.sum(FCWD_n, axis=(3, 4))
+
     return FCWD_dw
 
 
@@ -89,24 +79,14 @@ def FCWD_n(State, const, hw, T):
     component1 = 1 / np.sqrt(4 * np.pi * State.Lo * const.kb * temp)
     component2 = np.exp(-hrf) * hrf ** (final_mat - initial_mat) * factorial(initial_mat) / factorial(final_mat)
     component3 = lagur**2
-    if type(State.Lo) is np.ndarray or type(State.Lo) is float or type(State.Lo) is np.float64:
-        component4 = np.exp(
-            -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
-            / (4 * np.abs(State.Lo) * const.kb * temp)
-        )
-    else:
-        import pymc as pm
-        component4 = pm.math.exp(
-            -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
-            / (4 * State.Lo * const.kb * temp)
-        )
+    component4 = np.exp(
+        -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
+        / (4 * np.abs(State.Lo) * const.kb * temp)
+    )
     component5 = np.exp((-initial_mat * State.hO) / (const.kb * temp))
     FCWD_n = component1 * component2 * component3 * component4 * component5
-    if type(FCWD_n) is np.ndarray:
-        FCWD_uw = np.sum(FCWD_n, axis=(3, 4))
-    else:
-        from pymc import math
-        FCWD_uw = math.sum(FCWD_n, axis=(3, 4))
+    FCWD_uw = np.sum(FCWD_n, axis=(3, 4))
+
 
     return FCWD_uw
 
