@@ -16,6 +16,7 @@ def FCWD_v(State, const, hw, T):
     w_array = np.arange(0, State.vmlow)
     t_array = np.arange(0, State.vmhigh)
     # Create meshgrid for all combinations of T, hw, DG0, w, and t
+    energy_offset = min(State.DG0-0.5)
     temp, hw_mat, dg0_mat, final_mat, initial_mat = np.meshgrid(T, hw, State.DG0, w_array, t_array)
     hrf = HRF(State.Li, State.hO)
     # hrf = hrf.numpy() if isinstance(hrf, at.tensor) else hrf
@@ -45,7 +46,7 @@ def FCWD_v(State, const, hw, T):
         / (4 * State.Lo * const.kb * temp)
     )
     component5 = np.exp((-initial_mat * State.hO) / (np.array([const.kb]) * temp))
-    component6 = np.exp((-dg0_mat) / (np.array([const.kb])* temp))
+    component6 = np.exp((-dg0_mat+energy_offset) / (np.array([const.kb])* temp))
     FCWD_n = component1 * component2 * component3 * component4 * component5 * component6 
     FCWD_dw = np.sum(FCWD_n, axis=(3, 4))
 
@@ -118,7 +119,7 @@ def Z_abs(State, xParam):
 
 def Z_rec(State, C, D, xParam):
     dE = State.DG0[1] - State.DG0[0]  # the difference in value between each value of DG0 used for the integral
-
+    energy_offset = min(State.DG0-0.5)
     int = np.zeros((len(State.DG0), len(D.T)))
     for i in range(len(D.T)):
         for j in range(len(State.DG0)):
@@ -127,7 +128,7 @@ def Z_rec(State, C, D, xParam):
                     xParam["coeff"] * np.exp(-((State.DG0[j] - State.E) ** 2) / (2 * State.sigma**2))
                     + (1 - xParam["coeff"]) * np.exp(-State.DG0[j] / (C.kb * D.T[i]))
                 )
-                * np.exp(-State.DG0[j] / (C.kb * D.T[i]))
+                * np.exp((-State.DG0[j]+energy_offset) / (C.kb * D.T[i]))
                 * dE
             )
 
