@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
 
 
 def Gen(EX, CT, I0, D):

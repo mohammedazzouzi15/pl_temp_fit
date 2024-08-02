@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
 
 
 def EL_gen(EX, CT, D):
