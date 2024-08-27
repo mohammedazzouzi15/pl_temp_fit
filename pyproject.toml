@@ -17,6 +17,7 @@ dependencies = [
     "pandas",
     "h5py",
     "openpyxl",
+    "seaborn",
 ]
 requires-python = ">=3.7"
 dynamic = ["version"]
