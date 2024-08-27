@@ -93,6 +93,7 @@ class State:
         hO=0.15,
         fosc=0.5,
         dmus=3.0,
+        disorder_ext=5,
     ):
         self.E = E  # mean energy of the state
         self.knr = None
@@ -109,6 +110,8 @@ class State:
         self.Gen = None
         self.Sum = None
         self.off = off
+        self.disorder_ext = disorder_ext
+
         self.DG0 = self.calculate_DG0()
         self.hO = hO  # vibronic mode energy
         self.Li = Li  # high frequency reorganization energy
@@ -123,7 +126,7 @@ class State:
 
     def calculate_DG0(self):
         return np.linspace(
-            self.E - 5 * self.sigma, self.E + 5 * self.sigma, self.numbrstates
+            self.E - self.disorder_ext * self.sigma, self.E + self.disorder_ext * self.sigma, self.numbrstates
         )
     
     def calculate_fosc(self):

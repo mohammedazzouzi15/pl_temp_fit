@@ -348,36 +348,7 @@ def plot_exp_data_with_variance(
     return fig, axis
 
 
-def plot_exp_data_with_variance(
-    temperature_list_PL,
-    hws_PL,
-    variance_PL,
-    save_folder,
-    fixed_parameters_dict,
-    true_parameters,
-    Exp_data_PL,
-    fig=None,
-    axis=None,
-):
-    model_data_PL, EX_kr, Ex_knr = generate_data_utils.pl_trial(
-        temperature_list_PL,
-        hws_PL,
-        fixed_parameters_dict,
-        true_parameters,
-    )
-    truemodel_pl = model_data_PL / np.max(model_data_PL.reshape(-1, 1))
-    if fig is None:
-        fig, axis = Exp_data_utils.plot_PL_data_with_variance(
-            Exp_data_PL, temperature_list_PL, hws_PL, variance_PL, save_folder
-        )
 
-    for i, axes in enumerate(axis):
-        axes.plot(hws_PL, truemodel_pl[:, i], label="fit", color="C" + str(i))
-        axes.legend()
-        axes.set_ylim(0, 1.1)
-    fig.suptitle("PL")
-    fig.tight_layout(h_pad=0.0)
-    return fig, axis
 
 
 def get_param_dict(params_to_fit_init, true_params_list):
