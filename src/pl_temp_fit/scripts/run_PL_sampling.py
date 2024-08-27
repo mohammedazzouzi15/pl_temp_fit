@@ -10,7 +10,7 @@ from pl_temp_fit import (
 def main(model_config_id):
     model_config, model_config_save = config_utils.load_model_config(
         model_config_id,
-        database_folder="/rds/general/user/ma11115/home/pl_temp_fit/fit_experimental_emcee_PL/fit_data_base/",
+        database_folder="fit_experimental_emcee_PL/fit_data_base/",
     )
 
     csv_name_PL = model_config_save["csv_name_PL"]
@@ -63,6 +63,7 @@ def main(model_config_id):
         nsteps=model_config_save["nsteps"],
         coeff_spread=model_config_save["coeff_spread"],
         num_coords=model_config_save["num_coords"],
+        restart_sampling=False,
     )
 
 

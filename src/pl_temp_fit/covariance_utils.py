@@ -243,7 +243,7 @@ def plot_generated_data_PL(
     true_model_el_list = []
 
     for x in range(numnber_of_samples):
-        model_data_PL = generate_data_utils.generate_data_PL(
+        model_data_PL,EX_kr, Ex_knr  = generate_data_utils.generate_data_PL(
             **model_config,
             params_to_fit=params_to_fit,
             fixed_parameters_dict=fixed_parameters_dict,
@@ -276,6 +276,8 @@ def plot_generated_data_PL(
     )
     # plot the generated data
     if savefig:
+        import os
+        os.makedirs(save_folder, exist_ok=True)
         fig.savefig(save_folder + "/generated_data.png")
     fig.tight_layout()
     return co_var_mat_test_PL, variance_PL
@@ -287,7 +289,7 @@ def get_covariance_matrix_for_data_PL(
 ):
     true_model_pl_list = []
     for x in range(numnber_of_samples):
-        model_data_PL = generate_data_utils.generate_data_PL(
+        model_data_PL,EX_kr, Ex_knr  = generate_data_utils.generate_data_PL(
             **model_config,
             params_to_fit=params_to_fit,
             fixed_parameters_dict=fixed_parameters_dict,

@@ -5,6 +5,7 @@ from pl_temp_fit import generate_data_utils, Exp_data_utils
 import numpy as np
 from multiprocessing import Pool
 import os
+from pl_temp_fit import covariance_utils, config_utils
 
 
 def get_maximum_likelihood_estimate(
@@ -19,7 +20,7 @@ def get_maximum_likelihood_estimate(
     min_bound={},
     max_bound={},
 ):
-    nll = lambda *args: -generate_data_utils.pl_loglike(*args)
+    nll = lambda *args: -generate_data_utils.pl_loglike(*args)[0]
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:
@@ -204,7 +205,7 @@ def run_sampler_parallel(
     num_processes=None,
     restart_sampling=True,
 ):
-    #import emcee
+    import emcee
 
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
@@ -226,10 +227,21 @@ def run_sampler_parallel(
     # Set up the backend
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
-    backend = hDFBackend_2(filename, name="multi_core")
-    #backend = emcee.backends.HDFBackend(filename, name="multi_core")
+    # backend = hDFBackend_2(filename, name="multi_core")
+    backend = emcee.backends.HDFBackend(filename, name="multi_core")
     if restart_sampling or os.path.isfile(filename) == False:
         backend.reset(nwalkers, ndim)
+    else:
+        reader = emcee.backends.HDFBackend(filename, name="multi_core")
+        coords = reader.get_last_sample().coords
+        # add a little noise to the initial position
+        coords += 1e-3 * np.random.randn(*coords.shape)
+    if coords.shape[0] != nwalkers:
+        raise ValueError(
+            "invalid coordinate dimensions; expected {0}".format(
+                (nwalkers, ndim)
+            )
+        )
     print("Initial size: {0}".format(backend.iteration))
 
     # We'll track how the average autocorrelation time estimate changes
@@ -244,10 +256,15 @@ def run_sampler_parallel(
 
         num_processes = multiprocessing.cpu_count()
         print(f"num_processes = {num_processes}")
-
+    dtype = [
+        ("log_likelihood", float),
+        ("Chi square", float),
+        ("Ex_knr", float),
+        ("Ex_kr", float),
+    ]
     with Pool(processes=num_processes) as pool:
 
-        sampler = ensemble_sampler(
+        sampler = emcee.EnsembleSampler(
             nwalkers,
             ndim,
             generate_data_utils.log_probability_PL,
@@ -262,6 +279,7 @@ def run_sampler_parallel(
             ),
             backend=backend,
             pool=pool,
+            blobs_dtype=dtype,
         )
         start = time.time()
         # Now we'll sample for up to max_n steps
@@ -309,7 +327,7 @@ def plot_exp_data_with_variance(
     fig=None,
     axis=None,
 ):
-    model_data_PL = generate_data_utils.pl_trial(
+    model_data_PL, EX_kr, Ex_knr = generate_data_utils.pl_trial(
         temperature_list_PL,
         hws_PL,
         fixed_parameters_dict,
@@ -330,6 +348,9 @@ def plot_exp_data_with_variance(
     return fig, axis
 
 
+
+
+
 def get_param_dict(params_to_fit_init, true_params_list):
 
     true_parameters = {
@@ -345,3 +366,37 @@ def get_param_dict(params_to_fit_init, true_params_list):
             true_parameters[key][key2] = true_params_list[counter]
             counter += 1
     return true_parameters
+
+
+def plot_fit_limits(model_config, model_config_save):
+    fixed_parameters_dict, params_to_fit, min_bound, max_bound = (
+        config_utils.get_dict_params(model_config_save)
+    )
+    csv_name = model_config_save['csv_name_PL']
+    Exp_data, temperature_list, hws = Exp_data_utils.read_data(csv_name)
+    save_folder = model_config_save["save_folder"]
+    co_var_mat_PL, variance_PL = covariance_utils.plot_generated_data_PL(
+        save_folder,
+        model_config,
+        savefig=True,
+        fixed_parameters_dict=fixed_parameters_dict,
+        params_to_fit=model_config_save["params_to_fit_init"],
+    )
+    title_list = ["Initial Parameters", "Min Bound", "Max Bound"]
+    for _id, paramers in enumerate(
+        [
+            model_config_save["params_to_fit_init"],
+            model_config_save["min_bounds"],
+            model_config_save["max_bounds"],
+        ]
+    ):
+        fig, axis = plot_exp_data_with_variance(
+            model_config["temperature_list_PL"],
+            model_config["hws_PL"],
+            variance_PL,
+            save_folder,
+            fixed_parameters_dict,
+            paramers,
+            Exp_data,
+        )
+        fig.suptitle(title_list[_id])

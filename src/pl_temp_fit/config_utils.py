@@ -3,6 +3,7 @@ import os
 import datetime
 import uuid
 import numpy as np
+from pl_temp_fit import Exp_data_utils
 
 
 def save_model_config(
@@ -27,6 +28,7 @@ def save_model_config(
     num_coords=32,
     database_folder="fit_experimental_emcee_EL/fit_data_base/",
     data_folder="fit_experimental_emcee_EL/fit_data/",
+    test_id="",
 ):
     model_config = {
         "Temp_std_err": Temp_std_err,
@@ -42,7 +44,8 @@ def save_model_config(
     print(f"size of hw is {hws_PL.shape}")
     print(f"size of temperature_list is {temperature_list_PL.shape}")
     date = datetime.datetime.now().strftime("%Y_%m_%d")
-    test_id = str(uuid.uuid4())
+    if test_id == "":
+        test_id = str(uuid.uuid4())
     # generate the data
     save_folder = (
         data_folder
@@ -86,7 +89,7 @@ def save_model_config(
 
 def load_model_config(
     test_id,
-    database_folder="/rds/general/user/ma11115/home/pl_temp_fit/fit_experimental_emcee_EL/fit_data_base/",
+    database_folder="/rds/general/user/ma11115/home/pl_temp_fit/fit_experimental_emcee_PL/fit_data_base/",
 ):
     with open(database_folder + f"/{test_id}.json", "r") as f:
         model_config_save = json.load(f)
@@ -101,6 +104,29 @@ def load_model_config(
 
     for keys in model_config.keys():
         model_config[keys] = model_config_save[keys]
+    import os
+
+    csv_name = model_config_save["csv_name_PL"]
+    if os.path.exists(csv_name):
+        Exp_data, temperature_list_PL, hws_PL = Exp_data_utils.read_data(
+            csv_name
+        )
+        model_config["temperature_list_PL"] = temperature_list_PL
+        model_config["hws_PL"] = hws_PL
+    else:
+        model_config["temperature_list_PL"] = []
+        model_config["hws_PL"] = []
+
+    csv_name = model_config_save["csv_name_EL"]
+    if os.path.exists(csv_name):
+        Exp_data, temperature_list_EL, hws_EL = Exp_data_utils.read_data(
+            csv_name
+        )
+        model_config["temperature_list_EL"] = temperature_list_EL
+        model_config["hws_EL"] = hws_EL
+    else:
+        model_config["temperature_list_EL"] = []
+        model_config["hws_EL"] = []
 
     return model_config, model_config_save
 
