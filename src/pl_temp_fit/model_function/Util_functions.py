@@ -25,9 +25,6 @@ def FCWD_v(State, const, hw, T):
 
     for t, w in product(t_array, w_array):
         if w - t > -1:
-            try:
-                lag[t, w] = genlaguerre(t, w - t)(hrf)
-            except:
                 if t == 0:
                     lag[t, w] = 1
                 else:
