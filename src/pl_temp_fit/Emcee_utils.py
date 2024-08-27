@@ -43,7 +43,7 @@ class ensemble_sampler(emcee.EnsembleSampler):
             else:
                 map_func = map
             results = list(map_func(self.log_prob_fn, p))
-
+            print(results)
             log_prob = np.array([float(l) for l in results])
 
         # Check for log_prob returning NaN.

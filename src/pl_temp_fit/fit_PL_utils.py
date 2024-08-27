@@ -6,7 +6,7 @@ import numpy as np
 from multiprocessing import Pool
 import os
 from pl_temp_fit import covariance_utils, config_utils
-
+import emcee
 
 def get_maximum_likelihood_estimate(
     Exp_data_PL,
@@ -126,10 +126,15 @@ def run_sampler_single(
     # Set up the backend
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
-    backend = hDFBackend_2(filename, name="single_core")
+    backend = emcee.backends.HDFBackend(filename, name="single_core")
 
-    if restart_sampling:
+    if restart_sampling or os.path.isfile(filename) == False:
         backend.reset(nwalkers, ndim)
+    else:
+        reader = emcee.backends.HDFBackend(filename, name="single_core")
+        coords = reader.get_last_sample().coords
+        # add a little noise to the initial position
+        coords += 1e-3 * np.random.randn(*coords.shape)
     print("Initial size: {0}".format(backend.iteration))
 
     # We'll track how the average autocorrelation time estimate changes
@@ -139,8 +144,13 @@ def run_sampler_single(
     old_tau = np.inf
 
     # Here are the important lines
-
-    sampler = ensemble_sampler(
+    dtype = [
+        ("log_likelihood", float),
+        ("Chi square", float),
+        ("Ex_knr", float),
+        ("Ex_kr", float),
+    ]
+    sampler = emcee.EnsembleSampler(
         nwalkers,
         ndim,
         generate_data_utils.log_probability_PL,
@@ -154,6 +164,7 @@ def run_sampler_single(
             max_bound,
         ),
         backend=backend,
+        blobs_dtype=dtype,
     )
     start = time.time()
     # Now we'll sample for up to max_n steps
@@ -205,7 +216,7 @@ def run_sampler_parallel(
     num_processes=None,
     restart_sampling=True,
 ):
-    import emcee
+    
 
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
