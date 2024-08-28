@@ -3,10 +3,10 @@ import time
 from scipy.optimize import minimize
 from pl_temp_fit import generate_data_utils, Exp_data_utils
 import numpy as np
-from multiprocessing import Pool
+from multiprocess import Pool
 import os
 from pl_temp_fit import covariance_utils, config_utils
-
+import emcee
 
 def get_maximum_likelihood_estimate(
     Exp_data_PL,
@@ -105,7 +105,6 @@ def run_sampler_single(
     num_coords=32,
     restart_sampling=True,
 ):
-
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:
@@ -126,10 +125,14 @@ def run_sampler_single(
     # Set up the backend
     # Don't forget to clear it in case the file already exists
     filename = save_folder + "/sampler.h5"
-    backend = hDFBackend_2(filename, name="single_core")
-
-    if restart_sampling:
+    backend = emcee.backends.HDFBackend(filename, name="multi_core")
+    if restart_sampling or os.path.isfile(filename) == False:
         backend.reset(nwalkers, ndim)
+    else:
+        reader = emcee.backends.HDFBackend(filename, name="multi_core")
+        coords = reader.get_last_sample().coords
+        # add a little noise to the initial position
+        coords += 1e-3 * np.random.randn(*coords.shape)
     print("Initial size: {0}".format(backend.iteration))
 
     # We'll track how the average autocorrelation time estimate changes
@@ -139,8 +142,13 @@ def run_sampler_single(
     old_tau = np.inf
 
     # Here are the important lines
-
-    sampler = ensemble_sampler(
+    dtype = [
+        ("log_likelihood", float),
+        ("Chi square", float),
+        ("Ex_knr", float),
+        ("Ex_kr", float),
+    ]
+    sampler = emcee.EnsembleSampler(
         nwalkers,
         ndim,
         generate_data_utils.log_probability_PL,
@@ -154,6 +162,8 @@ def run_sampler_single(
             max_bound,
         ),
         backend=backend,
+        blobs_dtype=dtype,
+
     )
     start = time.time()
     # Now we'll sample for up to max_n steps
@@ -205,7 +215,6 @@ def run_sampler_parallel(
     num_processes=None,
     restart_sampling=True,
 ):
-    import emcee
 
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
@@ -262,26 +271,29 @@ def run_sampler_parallel(
         ("Ex_knr", float),
         ("Ex_kr", float),
     ]
-    with Pool(processes=num_processes) as pool:
 
+    def log_probability_PL_glob(theta):
+        return generate_data_utils.log_probability_PL(
+            theta,
+            Exp_data_PL,
+            co_var_mat_PL,
+            model_config,
+            fixed_parameters_dict,
+            params_to_fit,
+            min_bound,
+            max_bound,
+        )
+
+    start = time.time()
+    with Pool(processes=num_processes) as pool:
         sampler = emcee.EnsembleSampler(
             nwalkers,
             ndim,
-            generate_data_utils.log_probability_PL,
-            args=(
-                Exp_data_PL,
-                co_var_mat_PL,
-                model_config,
-                fixed_parameters_dict,
-                params_to_fit,
-                min_bound,
-                max_bound,
-            ),
+            log_probability_PL_glob,
             backend=backend,
             pool=pool,
             blobs_dtype=dtype,
         )
-        start = time.time()
         # Now we'll sample for up to max_n steps
         for sample in sampler.sample(
             coords, iterations=nsteps, progress=True, blobs0=[]
@@ -297,22 +309,18 @@ def run_sampler_parallel(
                 tau = sampler.get_autocorr_time(tol=0)
                 autocorr[index] = np.mean(tau)
                 index += 1
-                print(tau)
                 # Check convergence
                 converged = np.all(tau * 100 < sampler.iteration)
                 converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
                 if converged:
                     break
                 old_tau = tau
-                end = time.time()
             except Exception as e:
                 print(e)
                 print("error in the autocorrelation time")
-        # sampler.sample(pos, iterations = nsteps, progress=True,store=True)
-        end = time.time()
-        multi_time = end - start
-        print("multi process took {0:.1f} seconds".format(multi_time))
-        # print("{0:.1f} times faster than serial".format(serial_time / multi_time))
+    end = time.time()
+    multi_time = end - start
+    print("multi process took {0:.1f} seconds".format(multi_time))
     return sampler
 
 
@@ -348,11 +356,7 @@ def plot_exp_data_with_variance(
     return fig, axis
 
 
-
-
-
 def get_param_dict(params_to_fit_init, true_params_list):
-
     true_parameters = {
         "EX": {},
         "CT": {},
@@ -372,7 +376,7 @@ def plot_fit_limits(model_config, model_config_save):
     fixed_parameters_dict, params_to_fit, min_bound, max_bound = (
         config_utils.get_dict_params(model_config_save)
     )
-    csv_name = model_config_save['csv_name_PL']
+    csv_name = model_config_save["csv_name_PL"]
     Exp_data, temperature_list, hws = Exp_data_utils.read_data(csv_name)
     save_folder = model_config_save["save_folder"]
     co_var_mat_PL, variance_PL = covariance_utils.plot_generated_data_PL(

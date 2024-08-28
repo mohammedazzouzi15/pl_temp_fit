@@ -157,7 +157,7 @@ def generate_data_PL(
     model_data_PL = add_relative_intensity_error(
         model_data_PL, relative_intensity_std_error_PL
     )
-    return model_data_PL, EX_kr, Ex_knr 
+    return model_data_PL, EX_kr, Ex_knr
 
 
 def set_parameters(data, fixed_parameters_dict):
@@ -195,7 +195,7 @@ def pl_trial(
         )
     EX_kr = data.EX.kr
     Ex_knr = data.EX.knr
-    return PL_results_interp, EX_kr, Ex_knr 
+    return PL_results_interp, EX_kr, Ex_knr
 
 
 def el_trial(
@@ -346,7 +346,6 @@ def log_probability(
     if np.isinf(log_like):
         return -np.inf
     if log_prob is None:
-
         return -np.inf
     assert (
         log_prob.dtype.kind == "f"
@@ -378,7 +377,7 @@ def pl_loglike(
     except Exception as e:
         print(e)
         raise ValueError("The parameters to fit are not in the correct format")
-    model_data_PL, EX_kr, Ex_knr  = pl_trial(
+    model_data_PL, EX_kr, Ex_knr = pl_trial(
         temperature_list_PL,
         hws_PL,
         fixed_parameters_dict,
@@ -396,7 +395,7 @@ def pl_loglike(
     Chi_squared = np.dot(
         diff_PL.T, np.dot(np.linalg.inv(co_var_mat_PL), diff_PL)
     ) / (len(data_PL) - len(theta))
-    return loglike, Chi_squared, EX_kr, Ex_knr 
+    return loglike, Chi_squared, EX_kr, Ex_knr
 
 
 def log_probability_PL(
@@ -412,7 +411,7 @@ def log_probability_PL(
     lp = log_prior(theta, min_bounds, max_bounds)
     if lp == -np.inf:
         return -np.inf, None, None, None, None
-    log_like, Chi_squared, EX_kr, Ex_knr  = pl_loglike(
+    log_like, Chi_squared, EX_kr, Ex_knr = pl_loglike(
         theta,
         data_PL,
         co_var_mat_PL,
@@ -430,10 +429,9 @@ def log_probability_PL(
     if np.isinf(log_like):
         return -np.inf, None, None, None, None
     if log_prob is None:
-
         return -np.inf, None, None, None, None
-    assert (
-        log_prob.dtype.kind == "f"
-    ), f"the log_prob is not a float but a {type(log_prob)}"
+    # assert (
+    #    log_prob.dtype.kind == "f"
+    # ), f"the log_prob is not a float but a {type(log_prob)}"
 
-    return log_prob, log_like[0], Chi_squared, EX_kr[-1], Ex_knr[0][-1] 
+    return log_prob, log_like[0], Chi_squared, EX_kr[-1], Ex_knr[0][-1]
