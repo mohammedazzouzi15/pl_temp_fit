@@ -1,14 +1,36 @@
-# function to simulate the low temperature luminescence spectra of organic semiconductors
+"""Functions to simulate the low temperature luminescence spectra of organic semiconductors and the definition of the different classes used in the simulation.
+
+the classes considered are the following:
+- Constants: contains the constants used in the simulation
+- Data: contains the data used in the simulation
+- State: contains the state of the system
+- DataParams: contains the parameters of the data
+- LightSource: contains the light source used in the simulation
+
+the functions considered are the following:
+- ltlcalc: calculates the low temperature luminescence spectra of organic semiconductors
+"""
 
 import numpy as np
 
-from pl_temp_fit.model_function.PL_Events import Gen, Emi, SUM
-from pl_temp_fit.model_function.Recombination_Rates import krad, kabs, knonrad
-from pl_temp_fit.model_function.EL_events import EL_gen
+from pl_temp_fit.model_function.ElEvents import el_gen
+from pl_temp_fit.model_function.PlEvents import SUM, Emi, Gen
+from pl_temp_fit.model_function.RecombinationRates import kabs, knonrad, krad
 
 
-def LTLCalc(data):
-    # Calculate the LTPL data
+def ltlcalc(data):
+    """Calculate the low temperature luminescence spectra of organic semiconductors.
+
+    Args:
+    ----
+        data (Data): The data used in the simulation.
+
+    Returns:
+    -------
+        data (Data): the pl data class with the calculated properties of the system and the different states
+
+
+    """
     data.EX = krad(data.EX, data.c, data.D, data.xParam)
     data.EX = knonrad(data.EX, data.c, data.D, data.xParam)
     data.EX = kabs(data.EX, data.c, data.D, data.xParam)
@@ -20,7 +42,7 @@ def LTLCalc(data):
     if data.D.Luminecence_exp == "PL":
         data.EX, data.CT = Gen(data.EX, data.CT, data.I0, data.D)
     elif data.D.Luminecence_exp == "EL":
-        data.EX, data.CT = EL_gen(data.EX, data.CT, data.D)
+        data.EX, data.CT = el_gen(data.EX, data.CT, data.D)
     else:
         raise ValueError("Luminecence_exp must be either PL or EL")
     # Kinetic movements leading to changes in the Density of States
@@ -31,6 +53,20 @@ def LTLCalc(data):
 
 
 class Constants:
+    """Constants used in the simulation.
+
+    Attributes
+    ----------
+    - c (float): Speed of light in vacuum
+    - q (float): Charge of an electron
+    - m_e (float): Mass of an electron
+    - kb (float): Boltzmann constant(eV/K)
+    - E0 (float): Vacuum permittivity (eV * Angstroms / (elementary charge)^2)
+    - h (float): Planck's constant
+    - hbar (float): Reduced Planck's constant
+
+    """
+
     c = 3e8  # Speed of light in vacuum
     q = 1.6e-19  # % Charge of an electron
     m_e = 9.1e-31  # Mass of an electron
@@ -43,7 +79,21 @@ class Constants:
 
 
 class Data:
+    """Data used in the simulation.
+    
+    Attributes
+    ----------
+    - EX (State): The state of the system
+    - CT (State): The state of the system
+    - D (DataParams): The parameters of the data
+    - I0 (LightSource): The light source used in the simulation
+    - c (Constants): The constants used in the simulation
+    - xParam (dict): The parameters of the simulation
+
+    """
+
     def __init__(self):
+        """Initialize the data used in the simulation."""
         self.EX = State(
             E=1.4,
             vmhigh=2,
@@ -72,14 +122,40 @@ class Data:
         self.I0 = LightSource()
         self.c = Constants()
         self.xParam = {"coeff": 1}
-    def update(self, **kwargs):
-        #self.__dict__.update(kwargs)
+
+    def update(self, **kwargs: dict):
+        """Update the data used in the simulation."""
         self.EX.update(**kwargs["EX"])
         self.CT.update(**kwargs["CT"])
         self.D.update(**kwargs["D"])
 
 
 class State:
+    """The class of the excited state of the system.
+    
+    Attributes
+    ----------
+    - E (float): The mean energy of the state
+    - knr (float): The non-radiative recombination rate
+    - kr (float): The radiative recombination rate
+    - ka_hw (float): The absorption rate
+    - vmhigh : number of high vibrational states to consider
+    - vmlow : number of low vibrational states to consider
+    - sigma : The standard deviation of the state energy following a Gaussian distribution
+    - numbrstates : The number of states to consider
+    - Gen : The generation rate of the state
+    - Sum : The sum of the state
+    - off : The state is off
+    - DG0 : The gibbs free energy of the states
+    - hO : The vibronic mode energy
+    - Li : The high frequency reorganization energy
+    - Lo : The low frequency reorganization energy
+    - fosc : The oscillator strength
+    - dmus : The diufference in static dipole moment
+    - disorder_ext : The extension o fthe disorder gaussian distribution
+
+    """
+
     def __init__(
         self,
         E,
@@ -126,9 +202,11 @@ class State:
 
     def calculate_DG0(self):
         return np.linspace(
-            self.E - self.disorder_ext * self.sigma, self.E + self.disorder_ext * self.sigma, self.numbrstates
+            self.E - self.disorder_ext * self.sigma,
+            self.E + self.disorder_ext * self.sigma,
+            self.numbrstates,
         )
-    
+
     def calculate_fosc(self):
         self.fosc = 10**self.log_fosc
 
@@ -152,8 +230,9 @@ class DataParams:
         self.n = 1.0
         self.Luminecence_exp = "PL"  # 'PL' or 'EL
         self.log_kEXCT = 11
+
     def calculate_kEXCT(self):
-        self.kEXCT= 10 ** self.log_kEXCT
+        self.kEXCT = 10**self.log_kEXCT
 
     def update(self, **kwargs):
         for key, value in kwargs.items():

@@ -61,5 +61,5 @@ fit_results/*
 .python-version
 *.png
 *.h5
-fit_experimental_emcee_PL/fit_data_base/*.json
-fit_experimental_emcee_PL/fit_data/*/*/*/*/maximum_likelihood_estimate.txt
+fit_experimental_emcee_pl/fit_data_base/*.json
+fit_experimental_emcee_pl/fit_data/*/*/*/*/maximum_likelihood_estimate.txt
