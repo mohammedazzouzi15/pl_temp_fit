@@ -220,10 +220,19 @@ def plot_chains(reader, model_config_save, discard=50):
                 for x in model_config_save["params_to_fit_init"][key].keys()
             ]
         )
+    params_to_fit = model_config_save["params_to_fit_init"] 
+    labels = []
+    min_bound = {}
+    max_bound = {}
+    for key in params_to_fit.keys():
+        for keys in params_to_fit[key].keys():
+            labels.append(f"{key}_{keys}")
+            min_bound[f"{key}_{keys}"] = model_config_save["min_bounds"][key][keys]
+            max_bound[f"{key}_{keys}"] = model_config_save["max_bounds"][key][keys]
+
     labels = label_list
-    fig, axes = plt.subplots(5, figsize=(10, 7), sharex=True)
     samples = reader.get_chain(discard=discard)
-    # labels = ["E", "sigma_E", "LI", "L0", "H0"]
+    fig, axes = plt.subplots(samples.shape[-1], figsize=(10, 1.5*samples.shape[-1]), sharex=True)
     ndim = len(labels)
     for i in range(ndim):
         ax = axes[i]
@@ -231,8 +240,12 @@ def plot_chains(reader, model_config_save, discard=50):
         ax.set_xlim(0, len(samples))
         ax.set_ylabel(labels[i])
         ax.yaxis.set_label_coords(-0.1, 0.5)
+        if min_bound[labels[i]] is not None and max_bound[labels[i]] is not None:
+            ax.set_ylim(min_bound[labels[i]], max_bound[labels[i]]) 
+
     axes[-1].set_xlabel("step number")
     fig.suptitle(f"Sampler chain for {csv_name.split('/')[-1]}")
+    fig.tight_layout()
     fig.show()
 
 
@@ -256,8 +269,9 @@ def plot_diff_chains(
             ]
         )
     labels = label_list
-    fig, axes = plt.subplots(5, figsize=(10, 7), sharex=True)
     samples = reader.get_chain(discard=discard)
+    fig, axes = plt.subplots(samples.shape[-1], figsize=(10, 1.5*samples.shape[-1]), sharex=True)
+
     # labels = ["E", "sigma_E", "LI", "L0", "H0"]
     ndim = len(labels)
     for i in range(ndim):

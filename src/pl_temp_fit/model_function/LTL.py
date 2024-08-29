@@ -122,12 +122,21 @@ class Data:
         self.I0 = LightSource()
         self.c = Constants()
         self.xParam = {"coeff": 1}
+        self.voltage_results = {}
 
     def update(self, **kwargs: dict):
         """Update the data used in the simulation."""
         self.EX.update(**kwargs["EX"])
         self.CT.update(**kwargs["CT"])
         self.D.update(**kwargs["D"])
+
+    def get_delta_voc_nr(self):
+        raditaive_decay = self.CT.kr + self.EX.kr
+        non_radiative_decay = self.CT.knr + self.EX.knr
+        self.voltage_results["internal_quantum_efficiency"] = raditaive_decay / (raditaive_decay + non_radiative_decay) 
+        pe = 0.21 # Here we assume that theemission probability that is  ration of J0rad  by the integrated radiative recombination is 0.21
+        self.voltage_results["external_quantum_efficiency"] = 1 / ((1 + (pe -1) * self.voltage_results["internal_quantum_efficiency"])/ self.voltage_results["internal_quantum_efficiency"] / pe) 
+        self.voltage_results["delta_voc_nr"] = self.c.kb * self.D.T * np.log(1/ self.voltage_results["external_quantum_efficiency"]) 
 
 
 class State:
@@ -172,8 +181,8 @@ class State:
         disorder_ext=5,
     ):
         self.E = E  # mean energy of the state
-        self.knr = None
-        self.kr = None
+        self.knr = 0
+        self.kr = 0
         self.ka_hw = None
         self.vmhigh = (
             vmhigh  # number of vibrational states above the initial state

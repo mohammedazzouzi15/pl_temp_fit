@@ -56,7 +56,7 @@ def generate_data(
     # relative intensity error
     def add_relative_intensity_error(
         model_data_pl, relative_intensity_std_error
-    )->np.array:
+    ) -> np.array:
         relative_intensity_model = np.max(model_data_pl, axis=0) / max(
             model_data_pl.reshape(-1, 1)
         )
@@ -88,13 +88,15 @@ def generate_data(
     # error in the detection wavelength
     hws_pl = hws_pl + np.random.normal(0, hws_std_err, len(hws_pl))
     hws_el = hws_el + np.random.normal(0, hws_std_err, len(hws_el))
-    model_data_el, model_data_pl = el_trial(
-        temperature_list_el,
-        hws_el,
-        temperature_list_pl,
-        hws_pl,
-        fixed_parameters_dict,
-        params_to_fit,
+    model_data_el, model_data_pl, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr = (
+        el_trial(
+            temperature_list_el,
+            hws_el,
+            temperature_list_pl,
+            hws_pl,
+            fixed_parameters_dict,
+            params_to_fit,
+        )
     )
     model_data_pl = add_relative_intensity_error(
         model_data_pl, relative_intensity_std_error_pl
@@ -137,7 +139,7 @@ def generate_data_pl(
     # relative intensity error
     def add_relative_intensity_error(
         model_data_pl, relative_intensity_std_error
-    )->np.array:    
+    ) -> np.array:
         relative_intensity_model = np.max(model_data_pl, axis=0) / max(
             model_data_pl.reshape(-1, 1)
         )
@@ -274,7 +276,20 @@ def el_trial(
         pl_results_interp[:, i] = np.interp(
             hws_pl, data.D.hw, pl_results[:, i]
         )
-    return el_results_interp, pl_results_interp  # / max(pl_results)
+    data.get_delta_voc_nr()
+    CT_kr = data.CT.kr
+    CT_knr = data.CT.knr
+    EX_kr = data.EX.kr
+    EX_knr = data.EX.knr
+    return (
+        el_results_interp,
+        pl_results_interp,
+        data.voltage_results["delta_voc_nr"],
+        CT_knr,
+        CT_kr,
+        EX_knr,
+        EX_kr,
+    )  # / max(pl_results)
 
 
 def log_prior(theta, min_bounds, max_bounds):
@@ -355,13 +370,15 @@ def el_loglike(
         print(e)
         raise ValueError("The parameters to fit are not in the correct format")
 
-    model_data_el, model_data_pl = el_trial(
-        temperature_list_el,
-        hws_el,
-        temperature_list_pl,
-        hws_pl,
-        fixed_parameters_dict,
-        params_to_fit_updated,
+    model_data_el, model_data_pl, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr = (
+        el_trial(
+            temperature_list_el,
+            hws_el,
+            temperature_list_pl,
+            hws_pl,
+            fixed_parameters_dict,
+            params_to_fit_updated,
+        )
     )
     model_data_el = model_data_el / np.max(model_data_el.reshape(-1, 1))
     model_data_el = model_data_el.reshape(-1, 1)
@@ -373,7 +390,7 @@ def el_loglike(
     data_pl = data_pl.reshape(-1, 1)
     # check that the data in model_data does not contain NaNs or infs
     if np.isnan(model_data_el).any() or np.isinf(model_data_el).any():
-        return [-np.inf]
+        return [[-np.inf]], [[10]], [[10]], None, None, None, None
     diff_el = data_el - model_data_el
     diff_el[np.abs(diff_el) < 1e-3] = 0
     diff_el[np.abs(data_el) < 3e-2] = 0
@@ -381,7 +398,11 @@ def el_loglike(
     diff_pl = data_pl - model_data_pl
     diff_pl[np.abs(diff_pl) < 1e-3] = 0
     diff_pl[np.abs(data_pl) < 3e-2] = 0
-    return loglike -0.5 * np.dot(diff_pl.T, np.dot(inv_co_var_mat_pl, diff_pl))
+    log_like = loglike - 0.5 * np.dot(
+        diff_pl.T, np.dot(inv_co_var_mat_pl, diff_pl)
+    )
+    Chi_squared = -2 * log_like / (len(data_pl) + len(data_el) - len(theta))
+    return log_like, Chi_squared, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr
 
 
 def log_probability(
@@ -397,7 +418,7 @@ def log_probability(
     max_bounds,
 ):
     """Calculate the log probability for the EL and PL spectra.
-    
+
     Args:
     ----
     theta (np.array): The parameters to fit
@@ -410,15 +431,15 @@ def log_probability(
     params_to_fit (dict): The parameters to fit in the model
     min_bounds (dict): The minimum bounds for the parameters
     max_bounds (dict): The maximum bounds for the parameters
-    
+
     Returns:
     -------
     float: The log probability for the EL and PL spectra
     """
     lp = log_prior(theta, min_bounds, max_bounds)
     if lp == -np.inf:
-        return -np.inf
-    log_like = el_loglike(
+        return -np.inf, -np.inf, 10, None, None, None, None, None
+    log_like, chi_squared, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr = el_loglike(
         theta,
         data_el,
         data_pl,
@@ -431,14 +452,20 @@ def log_probability(
         fixed_parameters_dict,
         params_to_fit,
     )
-    log_prob = lp + log_like[0]
-    if np.isnan(log_like):
-        return -np.inf
-    if np.isinf(log_like):
-        return -np.inf
-    if log_prob is None:
-        return -np.inf
-    return log_prob
+    log_prob = lp + log_like[0][0]
+    # Check for invalid log likelihood values
+    if np.isnan(log_like) or np.isinf(log_like) or log_like is None:
+        return -np.inf, -np.inf, 10, None, None, None, None, None
+    return (
+        log_prob,
+        log_like[0][0],
+        chi_squared[0][0],
+        dv_nr[0][-1],
+        CT_knr[0][-1],
+        CT_kr[-1],
+        EX_knr[0][-1],
+        EX_kr[-1],
+    )
 
 
 def pl_loglike(
@@ -451,7 +478,7 @@ def pl_loglike(
     params_to_fit={},
 ):
     """Calculate the log likelihood for the PL spectra.
-    
+
     Args:
     ----
     theta (np.array): The parameters to fit
@@ -461,11 +488,11 @@ def pl_loglike(
     hws_pl (np.array): The photon energies for the PL spectra
     fixed_parameters_dict (dict): The fixed parameters for the model in a dictionary for the different classes
     params_to_fit (dict): The parameters to fit in the model
-    
+
     Returns:
     -------
     float: The log likelihood for the PL spectra
-    
+
     """
     params_to_fit_updated = {"EX": {}, "CT": {}, "D": {}}
     counter = 0
@@ -492,9 +519,7 @@ def pl_loglike(
     diff_pl = data_pl_copy - model_data_pl
     diff_pl[np.abs(data_pl_copy) < 3e-2] = 0
     loglike = -0.5 * np.dot(diff_pl.T, np.dot(inv_co_var_mat_pl, diff_pl))
-    Chi_squared = np.dot(diff_pl.T, np.dot(inv_co_var_mat_pl, diff_pl)) / (
-        len(data_pl) - len(theta)
-    )
+    Chi_squared = -2 * loglike / (len(data_pl) - len(theta))
     return loglike, Chi_squared, EX_kr, Ex_knr
 
 
@@ -520,11 +545,7 @@ def log_probability_pl(
         fixed_parameters_dict,
         params_to_fit,
     )
-    log_prob = lp + log_like[0]
-    if np.isnan(log_like):
+    log_prob = lp + log_like[0][0]
+    if np.isnan(log_like) or np.isinf(log_like) or log_like is None:
         return -np.inf, None, None, None, None
-    if np.isinf(log_like):
-        return -np.inf, None, None, None, None
-    if log_prob is None:
-        return -np.inf, None, None, None, None
-    return log_prob, log_like[0], Chi_squared, EX_kr[-1], Ex_knr[0][-1]
+    return log_prob, log_like[0], Chi_squared[0][0], EX_kr[-1], Ex_knr[0][-1]

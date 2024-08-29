@@ -5,8 +5,9 @@ from pl_temp_fit import generate_data_utils, Exp_data_utils
 import numpy as np
 from multiprocess import Pool
 import os
-from pl_temp_fit import covariance_utils, config_utils
+from pl_temp_fit import covariance_utils, config_utils, FitUtils
 import emcee
+
 
 def get_maximum_likelihood_estimate(
     Exp_data_pl,
@@ -107,102 +108,43 @@ def run_sampler_single(
     num_coords=32,
     restart_sampling=True,
 ):
-    init_params, min_bound_list, max_bound_list = [], [], []
-    counter = 0
-    for key in ["EX", "CT", "D"]:
-        if params_to_fit[key] == {}:
-            continue
-        for key2 in params_to_fit[key].keys():
-            init_params.append(params_to_fit[key][key2])
-            min_bound_list.append(min_bound[key][key2])
-            max_bound_list.append(max_bound[key][key2])
-            counter += 1
-    min_bound_list = np.array(min_bound_list)
-    max_bound_list = np.array(max_bound_list)
-    num_parameters = counter
-    coords = init_params + 0.1 * coeff_spread * (
-        max_bound_list - min_bound_list
-    ) * np.random.randn(num_coords, num_parameters)
+    coords, backend = FitUtils.get_initial_coords(
+        params_to_fit,
+        min_bound,
+        max_bound,
+        coeff_spread,
+        num_coords,
+        save_folder,
+        restart_sampling,
+        name="single_core",
+    )
     nwalkers, ndim = coords.shape
-    # Set up the backend
-    # Don't forget to clear it in case the file already exists
-    filename = save_folder + "/sampler.h5"
-    backend = emcee.backends.HDFBackend(filename, name="multi_core")
-    if restart_sampling or os.path.isfile(filename) == False:
-        backend.reset(nwalkers, ndim)
-    else:
-        reader = emcee.backends.HDFBackend(filename, name="multi_core")
-        coords = reader.get_last_sample().coords
-        # add a little noise to the initial position
-        coords += 1e-3 * np.random.randn(*coords.shape)
-    print("Initial size: {0}".format(backend.iteration))
-
-    # We'll track how the average autocorrelation time estimate changes
-    index = 0
-    autocorr = np.empty(nsteps)
-    # This will be useful to testing convergence
-    old_tau = np.inf
-
     # Here are the important lines
+    inv_cov_pl = np.linalg.inv(co_var_mat_pl)
+    def log_probability_glob(theta):
+        return generate_data_utils.log_probability_pl(
+            theta,
+            Exp_data_pl,
+            inv_cov_pl,
+            model_config,
+            fixed_parameters_dict,
+            params_to_fit,
+            min_bound,
+            max_bound,
+        )
     dtype = [
         ("log_likelihood", float),
         ("Chi square", float),
         ("Ex_knr", float),
         ("Ex_kr", float),
     ]
-    inv_covar_mat = np.linalg.inv(co_var_mat_pl)
-    sampler = emcee.EnsembleSampler(
-        nwalkers,
-        ndim,
-        generate_data_utils.log_probability_pl,
-        args=(
-            Exp_data_pl,
-            inv_covar_mat,
-            model_config,
-            fixed_parameters_dict,
-            params_to_fit,
-            min_bound,
-            max_bound,
-        ),
-        backend=backend,
-        blobs_dtype=dtype,
-
+    return FitUtils.run_single_process_sampling(
+        log_probability_glob,
+        coords,
+        backend,
+        dtype=dtype,
+        nsteps=nsteps, 
     )
-    
-    start = time.time()
-
-    # Now we'll sample for up to max_n steps
-    for sample in sampler.sample(
-        coords, iterations=nsteps, progress=True, blobs0=[]
-    ):
-        # Only check convergence every 100 steps
-        if sampler.iteration % 100:
-            continue
-
-        # Compute the autocorrelation time so far
-        # Using tol=0 means that we'll always get an estimate even
-        # if it isn't trustworthy
-        try:
-            tau = sampler.get_autocorr_time(tol=0)
-            autocorr[index] = np.mean(tau)
-            index += 1
-            print(tau)
-            # Check convergence
-            converged = np.all(tau * 100 < sampler.iteration)
-            converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-            if converged:
-                break
-            old_tau = tau
-            end = time.time()
-        except Exception as e:
-            print(e)
-            print("error in the autocorrelation time")
-    # sampler.sample(pos, iterations = nsteps, progress=True,store=True)
-    end = time.time()
-    multi_time = end - start
-    print("single process took {0:.1f} seconds".format(multi_time))
-    # print("{0:.1f} times faster than serial".format(serial_time / multi_time))
-    return sampler
 
 
 def run_sampler_parallel(
@@ -220,68 +162,27 @@ def run_sampler_parallel(
     num_processes=None,
     restart_sampling=True,
 ):
+    coords, backend = FitUtils.get_initial_coords(
+        params_to_fit,
+        min_bound,
+        max_bound,
+        coeff_spread,
+        num_coords,
+        save_folder,
+        restart_sampling,
+    )
 
-    init_params, min_bound_list, max_bound_list = [], [], []
-    counter = 0
-    for key in ["EX", "CT", "D"]:
-        if params_to_fit[key] == {}:
-            continue
-        for key2 in params_to_fit[key].keys():
-            init_params.append(params_to_fit[key][key2])
-            min_bound_list.append(min_bound[key][key2])
-            max_bound_list.append(max_bound[key][key2])
-            counter += 1
-    min_bound_list = np.array(min_bound_list)
-    max_bound_list = np.array(max_bound_list)
-    num_parameters = counter
-    coords = init_params + 0.1 * coeff_spread * (
-        max_bound_list - min_bound_list
-    ) * np.random.randn(num_coords, num_parameters)
-    nwalkers, ndim = coords.shape
-    # Set up the backend
-    # Don't forget to clear it in case the file already exists
-    filename = save_folder + "/sampler.h5"
-    # backend = hDFBackend_2(filename, name="multi_core")
-    backend = emcee.backends.HDFBackend(filename, name="multi_core")
-    if restart_sampling or os.path.isfile(filename) == False:
-        backend.reset(nwalkers, ndim)
-    else:
-        reader = emcee.backends.HDFBackend(filename, name="multi_core")
-        coords = reader.get_last_sample().coords
-        # add a little noise to the initial position
-        coords += 1e-3 * np.random.randn(*coords.shape)
-    if coords.shape[0] != nwalkers:
-        raise ValueError(
-            "invalid coordinate dimensions; expected {0}".format(
-                (nwalkers, ndim)
-            )
-        )
-    print("Initial size: {0}".format(backend.iteration))
-
-    # We'll track how the average autocorrelation time estimate changes
-    index = 0
-    autocorr = np.empty(nsteps)
-    # This will be useful to testing convergence
-    old_tau = np.inf
-
+    inv_cov_pl = np.linalg.inv(co_var_mat_pl)
     # Here are the important lines
-    if num_processes is None:
-        import multiprocessing
 
-        num_processes = multiprocessing.cpu_count()
-        print(f"num_processes = {num_processes}")
-    dtype = [
-        ("log_likelihood", float),
-        ("Chi square", float),
-        ("Ex_knr", float),
-        ("Ex_kr", float),
-    ]
-    inv_covar_mat = np.linalg.inv(co_var_mat_pl)
-    def log_probability_pl_glob(theta):
+    if num_processes is None:
+        num_processes = FitUtils.get_number_of_cores()
+
+    def log_probability_glob(theta):
         return generate_data_utils.log_probability_pl(
             theta,
             Exp_data_pl,
-            inv_covar_mat,
+            inv_cov_pl,
             model_config,
             fixed_parameters_dict,
             params_to_fit,
@@ -289,43 +190,21 @@ def run_sampler_parallel(
             max_bound,
         )
 
-    start = time.time()
-    with Pool(processes=num_processes) as pool:
-        sampler = emcee.EnsembleSampler(
-            nwalkers,
-            ndim,
-            log_probability_pl_glob,
-            backend=backend,
-            pool=pool,
-            blobs_dtype=dtype,
-        )
-        # Now we'll sample for up to max_n steps
-        for sample in sampler.sample(
-            coords, iterations=nsteps, progress=True, blobs0=[]
-        ):
-            # Only check convergence every 100 steps
-            if sampler.iteration % 100:
-                continue
-            # Compute the autocorrelation time so far
-            # Using tol=0 means that we'll always get an estimate even
-            # if it isn't trustworthy
-            try:
-                tau = sampler.get_autocorr_time(tol=0)
-                autocorr[index] = np.mean(tau)
-                index += 1
-                # Check convergence
-                converged = np.all(tau * 100 < sampler.iteration)
-                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-                if converged:
-                    break
-                old_tau = tau
-            except Exception as e:
-                print(e)
-                print("error in the autocorrelation time")
-    end = time.time()
-    multi_time = end - start
-    print("multi process took {0:.1f} seconds".format(multi_time))
-    return sampler
+    dtype = [
+        ("log_likelihood", float),
+        ("Chi square", float),
+        ("Ex_knr", float),
+        ("Ex_kr", float),
+    ]
+
+    return FitUtils.run_sampling_in_parallel(
+        log_probability_glob,
+        coords,
+        backend,
+        dtype,
+        num_processes,
+        nsteps,
+    )
 
 
 def plot_exp_data_with_variance(
