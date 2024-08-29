@@ -21,7 +21,13 @@ def get_maximum_likelihood_estimate(
     min_bound={},
     max_bound={},
 ):
-    nll = lambda *args: -generate_data_utils.pl_loglike(*args)[0]
+    def nll(*args):
+        nll = -generate_data_utils.pl_loglike(*args)[0]
+        # check type of nll
+        if isinstance(nll, np.ndarray):
+            return nll[0][0]
+        return nll
+
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:

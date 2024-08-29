@@ -1,2 +1,0 @@
-Maximum likelihood estimates:
-  EX_E = 1.423  EX_sigma = 0.030  EX_Li = 0.048  EX_Lo = 0.062  EX_hO = 0.125Maximum log likelihood: 33.229466454527184
