@@ -18,7 +18,7 @@ def read_data(csv_file):
     return truemodel_pl, temperature_list, hws
 
 
-def plot_PL_data_with_variance(
+def plot_pl_data_with_variance(
      Exp_data, temperature_list, hws, variance_data, save_folder,savefig=False):
 
     fig, axes = plt.subplots(1,len(temperature_list), figsize=(20, 5))
@@ -52,7 +52,7 @@ def plot_PL_data_with_variance(
         fig.savefig(save_folder+"/data_with_variance.png")
     return fig,axes
 
-def plot_PL_data(
+def plot_pl_data(
      truemodel_pl, temperature_list, hws,title="Experimental Data"
 ):
     fig,ax= plt.subplots(1,2, figsize=(10, 5))

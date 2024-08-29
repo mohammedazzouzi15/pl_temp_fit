@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from pl_temp_fit import fit_PL_utils
+from pl_temp_fit import fit_pl_utils
 from pl_temp_fit import covariance_utils
 from pl_temp_fit import Exp_data_utils
 
@@ -177,9 +177,9 @@ def plot_lifetime(
     )
     ax[1].set_xlabel("Log of k_r at " + str(temperature) + " K")
     ax[1].set_ylabel("Number of samples")
-    PL_QE = blobs["Ex_kr"] / (blobs["Ex_kr"] + blobs["Ex_knr"])
+    pl_QE = blobs["Ex_kr"] / (blobs["Ex_kr"] + blobs["Ex_knr"])
     ax[2].hist(
-        np.log10(PL_QE),
+        np.log10(pl_QE),
         30,
         histtype="step",
         range=(-4, 0),
@@ -211,7 +211,7 @@ def plot_chains(reader, model_config_save, discard=50):
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
@@ -246,7 +246,7 @@ def plot_diff_chains(
     chains_list: the list of chains to plot
     """
 
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
@@ -297,8 +297,8 @@ def plot_fit_to_experimental_data(
     """
     Temp_std_err = model_config_save["Temp_std_err"]
     hws_std_err = model_config_save["hws_std_err"]
-    relative_intensity_std_error_PL = model_config_save[
-        "relative_intensity_std_error_PL"
+    relative_intensity_std_error_pl = model_config_save[
+        "relative_intensity_std_error_pl"
     ]
     sigma = model_config_save["sigma"]
     save_folder = model_config_save["save_folder"]
@@ -306,7 +306,7 @@ def plot_fit_to_experimental_data(
     params_to_fit_init = model_config_save["params_to_fit_init"]
     min_bounds = model_config_save["min_bounds"]
     max_bounds = model_config_save["max_bounds"]
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     Exp_data, temperature_list, hws = Exp_data_utils.read_data(csv_name)
     distribution = reader.get_chain(discard=discard)
     if chains_list is not None:
@@ -320,20 +320,20 @@ def plot_fit_to_experimental_data(
             distribution = distribution[
                 blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
             ]
-    true_parameters = fit_PL_utils.get_param_dict(
+    true_parameters = fit_pl_utils.get_param_dict(
         params_to_fit_init, distribution[-1]
     )  # model_config_save['params_to_fit_init']#
-    co_var_mat_PL, variance_PL = covariance_utils.plot_generated_data_PL(
+    co_var_mat_pl, variance_pl = covariance_utils.plot_generated_data_pl(
         save_folder,
         model_config,
         savefig=True,
         fixed_parameters_dict=fixed_parameters_dict,
         params_to_fit=true_parameters,
     )
-    fig, ax = fit_PL_utils.plot_exp_data_with_variance(
+    fig, ax = fit_pl_utils.plot_exp_data_with_variance(
         temperature_list,
         hws,
-        variance_PL,
+        variance_pl,
         save_folder,
         fixed_parameters_dict,
         true_parameters,
@@ -343,14 +343,14 @@ def plot_fit_to_experimental_data(
         np.random.choice(len(distribution), 10), :
     ]:
 
-        true_parameters = fit_PL_utils.get_param_dict(
+        true_parameters = fit_pl_utils.get_param_dict(
             params_to_fit_init, true_parameters
         )
 
-        fig, ax = fit_PL_utils.plot_exp_data_with_variance(
+        fig, ax = fit_pl_utils.plot_exp_data_with_variance(
             temperature_list,
             hws,
-            variance_PL,
+            variance_pl,
             save_folder,
             fixed_parameters_dict,
             true_parameters,
@@ -381,8 +381,8 @@ def plot_fit_to_experimental_data_sameaxis(
     """
     Temp_std_err = model_config_save["Temp_std_err"]
     hws_std_err = model_config_save["hws_std_err"]
-    relative_intensity_std_error_PL = model_config_save[
-        "relative_intensity_std_error_PL"
+    relative_intensity_std_error_pl = model_config_save[
+        "relative_intensity_std_error_pl"
     ]
     sigma = model_config_save["sigma"]
     save_folder = model_config_save["save_folder"]
@@ -390,7 +390,7 @@ def plot_fit_to_experimental_data_sameaxis(
     params_to_fit_init = model_config_save["params_to_fit_init"]
     min_bounds = model_config_save["min_bounds"]
     max_bounds = model_config_save["max_bounds"]
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     Exp_data, temperature_list, hws = Exp_data_utils.read_data(csv_name)
     distribution = reader.get_chain(discard=discard)
     if chains_list is not None:
@@ -404,20 +404,20 @@ def plot_fit_to_experimental_data_sameaxis(
             distribution = distribution[
                 blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
             ]
-    true_parameters = fit_PL_utils.get_param_dict(
+    true_parameters = fit_pl_utils.get_param_dict(
         params_to_fit_init, distribution[-1]
     )  # model_config_save['params_to_fit_init']#
-    co_var_mat_PL, variance_PL = covariance_utils.plot_generated_data_PL(
+    co_var_mat_pl, variance_pl = covariance_utils.plot_generated_data_pl(
         save_folder,
         model_config,
         savefig=True,
         fixed_parameters_dict=fixed_parameters_dict,
         params_to_fit=true_parameters,
     )
-    fig, ax = fit_PL_utils.plot_exp_data_with_variance(
+    fig, ax = fit_pl_utils.plot_exp_data_with_variance(
         temperature_list,
         hws,
-        variance_PL,
+        variance_pl,
         save_folder,
         fixed_parameters_dict,
         true_parameters,
@@ -439,7 +439,7 @@ def plot_distribution(
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
@@ -486,7 +486,7 @@ def plot_distribution_multi(
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
@@ -531,7 +531,7 @@ def plot_corner(reader, model_config_save, discard=10,
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
-    csv_name = model_config_save["csv_name_PL"]
+    csv_name = model_config_save["csv_name_pl"]
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
