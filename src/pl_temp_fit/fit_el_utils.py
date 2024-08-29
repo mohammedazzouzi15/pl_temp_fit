@@ -35,6 +35,8 @@ def get_maximum_likelihood_estimate(
         # check type of nll
         if isinstance(nll, np.ndarray):
             return nll[0][0]
+        if isinstance(nll, list):
+            return nll[0][0]
         return nll
 
     init_params, min_bound_list, max_bound_list = [], [], []
