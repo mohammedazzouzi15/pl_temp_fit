@@ -513,11 +513,10 @@ def pl_loglike(
     )
     model_data_pl = model_data_pl / np.max(model_data_pl.reshape(-1, 1))
     model_data_pl = model_data_pl.reshape(-1, 1)
-    data_pl_copy = data_pl.copy()
-    data_pl_copy = data_pl_copy / np.max(data_pl.reshape(-1, 1))
-    data_pl_copy = data_pl_copy.reshape(-1, 1)
-    diff_pl = data_pl_copy - model_data_pl
-    diff_pl[np.abs(data_pl_copy) < 3e-2] = 0
+    data_pl = data_pl / np.max(data_pl.reshape(-1, 1))
+    data_pl = data_pl.reshape(-1, 1)
+    diff_pl = data_pl - model_data_pl
+    diff_pl[np.abs(data_pl) < 3e-2] = 0
     loglike = -0.5 * np.dot(diff_pl.T, np.dot(inv_co_var_mat_pl, diff_pl))
     Chi_squared = -2 * loglike / (len(data_pl) - len(theta))
     return loglike, Chi_squared, EX_kr, Ex_knr

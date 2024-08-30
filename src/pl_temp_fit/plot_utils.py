@@ -29,7 +29,7 @@ def plot_fit_statistics(
     if filter_log_likelihood:
         print(max(blobs["log_likelihood"]))
         blobs = blobs[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
+            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 2
         ]
         
     fig, ax = plt.subplots(1, 3, figsize=(10, 3))
@@ -203,6 +203,7 @@ def plot_lifetime(
         ax[i].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     fig.tight_layout()
     plt.show()
+    return fig, ax
 
 
 def plot_chains(reader, model_config_save, discard=50):
@@ -247,6 +248,7 @@ def plot_chains(reader, model_config_save, discard=50):
     fig.suptitle(f"Sampler chain for {csv_name.split('/')[-1]}")
     fig.tight_layout()
     fig.show()
+    return fig, axes
 
 
 def plot_diff_chains(
@@ -468,8 +470,8 @@ def plot_distribution(
     distribution = reader.get_chain(discard=discard, flat=True)
     if filter_log_likelihood:
         blobs = reader.get_blobs(flat=True, discard=discard)
-        distribution = distribution[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
+        distribution_plot = distribution[
+            blobs["log_likelihood"] > max(blobs["log_likelihood"])*2
         ]
     if fig is None:
         fig, axes = plt.subplots(5, figsize=(10, 7))
@@ -477,7 +479,7 @@ def plot_distribution(
     for i in range(ndim):
         ax = axes[i]
         ax.hist(
-            distribution[:, i],
+            distribution_plot[:, i],
             200,
             color="C" + str(i),
             linewidth=2,
@@ -564,3 +566,4 @@ def plot_corner(reader, model_config_save, discard=10,
     df_samples = pd.DataFrame(samples, columns=labels)
     g = sns.pairplot(df_samples, kind="hist", corner=True)
     g.fig.suptitle(f"Sampler corner plot for {csv_name.split('/')[-1]}")
+    return g.fig, g.axes

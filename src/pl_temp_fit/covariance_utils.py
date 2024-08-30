@@ -244,7 +244,7 @@ def plot_generated_data_pl(
         true_parameters {dict} -- true parameters for the model (default: {None})
 
     """
-    fig, ax = plt.subplots(1, 2, figsize=(10, 10))
+    fig, ax = plt.subplots(1, 2, figsize=(10, 7))
     true_model_pl_list = []
     true_model_el_list = []
 

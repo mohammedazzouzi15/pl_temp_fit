@@ -141,8 +141,8 @@ def run_sampler_single(
     dtype = [
         ("log_likelihood", float),
         ("Chi square", float),
-        ("Ex_knr", float),
         ("Ex_kr", float),
+        ("Ex_knr", float),
     ]
     return FitUtils.run_single_process_sampling(
         log_probability_glob,
@@ -199,8 +199,8 @@ def run_sampler_parallel(
     dtype = [
         ("log_likelihood", float),
         ("Chi square", float),
-        ("Ex_knr", float),
         ("Ex_kr", float),
+        ("Ex_knr", float),
     ]
 
     return FitUtils.run_sampling_in_parallel(
