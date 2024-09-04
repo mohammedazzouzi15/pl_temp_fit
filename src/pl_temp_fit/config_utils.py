@@ -121,30 +121,36 @@ def load_model_config(
     }
 
     for keys in model_config:
-        model_config[keys] = model_config_save[keys]
+        if keys in model_config_save:
+            model_config[keys] = model_config_save[keys]
+
+
     import os
+    if "csv_name_pl" in model_config_save:
+       
+        csv_name = model_config_save["csv_name_pl"]
+        if os.path.exists(csv_name):
+            Exp_data, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
+                csv_name
+            )
+            model_config["temperature_list_pl"] = temperature_list_pl
+            model_config["hws_pl"] = hws_pl
+        else:
+            model_config["temperature_list_pl"] = []
+            model_config["hws_pl"] = []
+    if "csv_name_el" in model_config_save:
+       
 
-    csv_name = model_config_save["csv_name_pl"]
-    if os.path.exists(csv_name):
-        Exp_data, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
-            csv_name
-        )
-        model_config["temperature_list_pl"] = temperature_list_pl
-        model_config["hws_pl"] = hws_pl
-    else:
-        model_config["temperature_list_pl"] = []
-        model_config["hws_pl"] = []
-
-    csv_name = model_config_save["csv_name_el"]
-    if os.path.exists(csv_name):
-        Exp_data, temperature_list_el, hws_el = Exp_data_utils.read_data(
-            csv_name
-        )
-        model_config["temperature_list_el"] = temperature_list_el
-        model_config["hws_el"] = hws_el
-    else:
-        model_config["temperature_list_el"] = []
-        model_config["hws_el"] = []
+        csv_name = model_config_save["csv_name_el"]
+        if os.path.exists(csv_name):
+            Exp_data, temperature_list_el, hws_el = Exp_data_utils.read_data(
+                csv_name
+            )
+            model_config["temperature_list_el"] = temperature_list_el
+            model_config["hws_el"] = hws_el
+        else:
+            model_config["temperature_list_el"] = []
+            model_config["hws_el"] = []
 
     return model_config, model_config_save
 
