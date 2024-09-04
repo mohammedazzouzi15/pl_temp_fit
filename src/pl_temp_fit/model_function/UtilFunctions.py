@@ -78,7 +78,7 @@ def FCWD_n(State, const, hw, T):
     component2 = np.exp(-hrf) * hrf ** (final_mat - initial_mat) * factorial(initial_mat) / factorial(final_mat)
     component3 = lagur**2
     component4 = np.exp(
-        -((hw_mat - dg0_mat + State.Lo + (final_mat - initial_mat) * State.hO) ** 2)
+        -((hw_mat - dg0_mat - State.Lo - (final_mat - initial_mat) * State.hO) ** 2)
         / (4 * np.abs(State.Lo) * const.kb * temp)
     )
     component5 = np.exp((-initial_mat * State.hO) / (const.kb * temp))

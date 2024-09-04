@@ -16,7 +16,7 @@ import numpy as np
 from pl_temp_fit.model_function.ElEvents import el_gen
 from pl_temp_fit.model_function.PlEvents import SUM, Emi, Gen
 from pl_temp_fit.model_function.RecombinationRates import kabs, knonrad, krad
-
+from pl_temp_fit.model_function.abs_events import calculate_alpha
 
 def ltlcalc(data):
     """Calculate the low temperature luminescence spectra of organic semiconductors.
@@ -49,6 +49,8 @@ def ltlcalc(data):
     data.EX, data.CT = SUM(data.EX, data.CT, data.c, data.D)
     # Emission of Photons
     data.D = Emi(data.EX, data.CT, data.D)
+    # Calculate the absorption of the system
+    data.D.alpha = calculate_alpha(data.EX, data.CT, data.D)
     return data
 
 
@@ -161,7 +163,7 @@ class State:
     - Lo : The low frequency reorganization energy
     - fosc : The oscillator strength
     - dmus : The diufference in static dipole moment
-    - disorder_ext : The extension o fthe disorder gaussian distribution
+    - disorder_ext : The extension o fthe disorder gaussian distribution now defined in units of eV
 
     """
 
@@ -178,7 +180,7 @@ class State:
         hO=0.15,
         fosc=0.5,
         dmus=3.0,
-        disorder_ext=5,
+        disorder_ext=0.05,
     ):
         self.E = E  # mean energy of the state
         self.knr = 0
@@ -211,8 +213,8 @@ class State:
 
     def calculate_DG0(self):
         return np.linspace(
-            self.E - self.disorder_ext * self.sigma,
-            self.E + self.disorder_ext * self.sigma,
+            self.E - self.disorder_ext,
+            self.E + self.disorder_ext,
             self.numbrstates,
         )
 
@@ -239,6 +241,8 @@ class DataParams:
         self.n = 1.0
         self.Luminecence_exp = "PL"  # 'PL' or 'EL
         self.log_kEXCT = 11
+        self.nie = 1.5
+        self.Excitondesnity = 1/np.power(5e-10,3)# in unit m^-3
 
     def calculate_kEXCT(self):
         self.kEXCT = 10**self.log_kEXCT
