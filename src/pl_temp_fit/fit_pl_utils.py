@@ -224,7 +224,48 @@ def plot_exp_data_with_variance(
     fig=None,
     axis=None,
 ):
-    model_data_pl, EX_kr, Ex_knr = generate_data_utils.pl_trial(
+    from pl_temp_fit.model_function import LTL
+
+    def pl_trial(
+        temperature_list_pl,
+        hws_pl,
+        fixed_parameters_dict={},
+        params_to_fit={},
+    ):
+        """Run the model to generate the  PL spectra.
+
+        Args:
+        ----
+        temperature_list_pl (np.array): The temperature list for the PL spectra
+        hws_pl (np.array): The photon energies for the PL spectra
+        fixed_parameters_dict (dict): The fixed parameters for the model in a dictionary for the different classes
+        params_to_fit (dict): The parameters to fit in the model
+
+        Returns:
+        -------
+        tuple: The model data for the PL spectra and the radiative and non-radiative recombination rates
+
+        """
+        data = LTL.Data()
+        data.update(**fixed_parameters_dict)
+        data.update(**params_to_fit)
+        data.D.Luminecence_exp = "PL"
+        data.D.T = temperature_list_pl  # np.array([300.0, 150.0, 80.0])
+        LTL.ltlcalc(data)
+        pl_results = data.D.kr_hw  # .reshape(-1, 1)
+        pl_results_interp = np.zeros((len(hws_pl), len(temperature_list_pl)))
+        abs_results_interp = np.zeros((len(hws_pl), len(temperature_list_pl)))
+        for i in range(len(temperature_list_pl)):
+            pl_results_interp[:, i] = np.interp(
+                hws_pl, data.D.hw, pl_results[:, i]
+            )
+            abs_results_interp[:,i] = np.interp(
+                hws_pl, data.D.hw, data.D.alpha[:, i]
+            )
+        pl_results_interp = pl_results_interp/pl_results_interp[pl_results_interp>0].max()
+        abs_results_interp = abs_results_interp / abs_results_interp.reshape(-1).max()
+        return pl_results_interp, abs_results_interp
+    model_data_pl, abs_results_interp = pl_trial(
         temperature_list_pl,
         hws_pl,
         fixed_parameters_dict,
@@ -238,6 +279,7 @@ def plot_exp_data_with_variance(
 
     for i, axes in enumerate(axis):
         axes.plot(hws_pl, truemodel_pl[:, i], label="fit", color="C" + str(i))
+        axes.plot(hws_pl, abs_results_interp[:, i], label="abs", color="C" + str(i), linestyle="--")    
         axes.legend()
         axes.set_ylim(0, 1.1)
     fig.suptitle("PL")
