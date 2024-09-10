@@ -6,6 +6,7 @@ import numpy as np
 from multiprocess import Pool
 import os
 from pl_temp_fit import covariance_utils, config_utils, FitUtils
+from pl_temp_fit.data_generators.SpectralDataGeneration import SpectralDataGeneration   
 import emcee
 
 
@@ -104,52 +105,37 @@ def run_sampler_single(
     save_folder,
     Exp_data_pl,
     co_var_mat_pl,
-    params_to_fit,
-    fixed_parameters_dict,
-    min_bound,
-    max_bound,
-    model_config,
+    data_generator,
     nsteps=10000,
     coeff_spread=10,
     num_coords=32,
     restart_sampling=True,
 ):
     coords, backend = FitUtils.get_initial_coords(
-        params_to_fit,
-        min_bound,
-        max_bound,
+        data_generator,
         coeff_spread,
         num_coords,
         save_folder,
         restart_sampling,
         name="single_core",
     )
-    nwalkers, ndim = coords.shape
-    # Here are the important lines
+
     inv_cov_pl = np.linalg.inv(co_var_mat_pl)
+    dtype = data_generator.dtypes
+
     def log_probability_glob(theta):
-        return generate_data_utils.log_probability_pl(
+        return data_generator.log_probability(
             theta,
             Exp_data_pl,
             inv_cov_pl,
-            model_config,
-            fixed_parameters_dict,
-            params_to_fit,
-            min_bound,
-            max_bound,
         )
-    dtype = [
-        ("log_likelihood", float),
-        ("Chi square", float),
-        ("Ex_kr", float),
-        ("Ex_knr", float),
-    ]
+
     return FitUtils.run_single_process_sampling(
         log_probability_glob,
         coords,
         backend,
         dtype=dtype,
-        nsteps=nsteps, 
+        nsteps=nsteps,
     )
 
 
@@ -157,11 +143,7 @@ def run_sampler_parallel(
     save_folder,
     Exp_data_pl,
     co_var_mat_pl,
-    params_to_fit,
-    fixed_parameters_dict,
-    min_bound,
-    max_bound,
-    model_config,
+    data_generator,
     nsteps=10000,
     coeff_spread=10,
     num_coords=32,
@@ -169,9 +151,7 @@ def run_sampler_parallel(
     restart_sampling=True,
 ):
     coords, backend = FitUtils.get_initial_coords(
-        params_to_fit,
-        min_bound,
-        max_bound,
+        data_generator,
         coeff_spread,
         num_coords,
         save_folder,
@@ -180,28 +160,16 @@ def run_sampler_parallel(
 
     inv_cov_pl = np.linalg.inv(co_var_mat_pl)
     # Here are the important lines
-
     if num_processes is None:
         num_processes = FitUtils.get_number_of_cores()
+    dtype = data_generator.dtypes
 
     def log_probability_glob(theta):
-        return generate_data_utils.log_probability_pl(
+        return data_generator.log_probability(
             theta,
             Exp_data_pl,
             inv_cov_pl,
-            model_config,
-            fixed_parameters_dict,
-            params_to_fit,
-            min_bound,
-            max_bound,
         )
-
-    dtype = [
-        ("log_likelihood", float),
-        ("Chi square", float),
-        ("Ex_kr", float),
-        ("Ex_knr", float),
-    ]
 
     return FitUtils.run_sampling_in_parallel(
         log_probability_glob,
@@ -259,12 +227,17 @@ def plot_exp_data_with_variance(
             pl_results_interp[:, i] = np.interp(
                 hws_pl, data.D.hw, pl_results[:, i]
             )
-            abs_results_interp[:,i] = np.interp(
+            abs_results_interp[:, i] = np.interp(
                 hws_pl, data.D.hw, data.D.alpha[:, i]
             )
-        pl_results_interp = pl_results_interp/pl_results_interp[pl_results_interp>0].max()
-        abs_results_interp = abs_results_interp / abs_results_interp.reshape(-1).max()
+        pl_results_interp = (
+            pl_results_interp / pl_results_interp[pl_results_interp > 0].max()
+        )
+        abs_results_interp = (
+            abs_results_interp / abs_results_interp.reshape(-1).max()
+        )
         return pl_results_interp, abs_results_interp
+
     model_data_pl, abs_results_interp = pl_trial(
         temperature_list_pl,
         hws_pl,
@@ -279,7 +252,13 @@ def plot_exp_data_with_variance(
 
     for i, axes in enumerate(axis):
         axes.plot(hws_pl, truemodel_pl[:, i], label="fit", color="C" + str(i))
-        axes.plot(hws_pl, abs_results_interp[:, i], label="abs", color="C" + str(i), linestyle="--")    
+        axes.plot(
+            hws_pl,
+            abs_results_interp[:, i],
+            label="abs",
+            color="C" + str(i),
+            linestyle="--",
+        )
         axes.legend()
         axes.set_ylim(0, 1.1)
     fig.suptitle("PL")

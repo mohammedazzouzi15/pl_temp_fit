@@ -4,12 +4,10 @@ import emcee
 import numpy as np
 import time
 from multiprocess import Pool
-
+from pl_temp_fit.data_generators.SpectralDataGeneration import SpectralDataGeneration
 
 def get_initial_coords(
-    params_to_fit,
-    min_bound,
-    max_bound,
+    data_generator:SpectralDataGeneration,
     coeff_spread,
     num_coords,
     save_folder,
@@ -19,12 +17,12 @@ def get_initial_coords(
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:
-        if params_to_fit[key] == {}:
+        if data_generator.params_to_fit_init[key] == {}:
             continue
-        for key2 in params_to_fit[key].keys():
-            init_params.append(params_to_fit[key][key2])
-            min_bound_list.append(min_bound[key][key2])
-            max_bound_list.append(max_bound[key][key2])
+        for key2 in data_generator.params_to_fit_init[key].keys():
+            init_params.append(data_generator.params_to_fit_init[key][key2])
+            min_bound_list.append(data_generator.min_bounds[key][key2])
+            max_bound_list.append(data_generator.max_bounds[key][key2])
             counter += 1
     min_bound_list = np.array(min_bound_list)
     max_bound_list = np.array(max_bound_list)
@@ -118,7 +116,7 @@ def run_sampling_in_parallel(
                 break
     end = time.time()
     multi_time = end - start
-    print(f"single process took {multi_time:.1f} seconds")
+    print(f"multi process took {multi_time:.1f} seconds")
     return sampler
 
 

@@ -104,6 +104,16 @@ def save_model_config(
 
     return model_config, test_id
 
+def updata_model_config(
+    test_id,
+    database_folder: Path,
+    model_config_save,
+):
+    with Path(database_folder, f"{test_id}.json").open("w") as f:
+        json.dump(model_config_save, f)
+
+    return test_id
+
 
 def load_model_config(
     test_id,
