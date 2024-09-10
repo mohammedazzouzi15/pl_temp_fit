@@ -78,7 +78,6 @@ def generate_data(
         return model_data_pl
 
     # error in the temperature of the sample
-
     temperature_list_pl = temperature_list_pl + np.random.normal(
         0, Temp_std_err, len(temperature_list_pl)
     )
