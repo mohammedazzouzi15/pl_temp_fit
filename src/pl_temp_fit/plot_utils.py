@@ -478,6 +478,7 @@ def plot_distribution(
     distribution = reader.get_chain(discard=discard, flat=True)
     blobs = reader.get_blobs(flat=True, discard=discard)
     distribution_plot = eval(f" distribution[{filter_log_likelihood}]")
+    distribution_plot = distribution_plot.reshape(-1, ndim)
     if fig is None:
         fig, axes = plt.subplots(ndim, figsize=(10, 7))
     axes_xlim = [[x, y] for x, y in zip(min_bounds_list, max_bounds_list)]
@@ -577,6 +578,7 @@ def plot_corner(reader, model_config_save, discard=10,
     samples = reader.get_chain(discard=discard, flat=True)
     blobs = reader.get_blobs(flat=True, discard=discard)
     samples = eval(f" samples[{filter_log_likelihood}]")
+    samples = samples.reshape(-1, len(labels))
     df_samples = pd.DataFrame(samples, columns=labels)
     g = sns.pairplot(df_samples, kind="hist", corner=True)
     g.fig.suptitle(f"Sampler corner plot for {csv_name.split('/')[-1]}")
