@@ -5,7 +5,7 @@ from pl_temp_fit import (
     covariance_utils,
     fit_pl_utils,
 )
-from pl_temp_fit.data_generators import PLAbsAndLifetime
+from pl_temp_fit.data_generators import PLAbs
 
 
 
@@ -21,7 +21,7 @@ def main(model_config_id):
         csv_name_pl
     )
     # initialising the data generator
-    pl_data_gen = PLAbsAndLifetime.PLAbsAndLifetime(temperature_list_pl,hws_pl)
+    pl_data_gen = PLAbs.PLAbs(temperature_list_pl,hws_pl)
     pl_data_gen.error_in_lifetime_high_temp = model_config_save["error_in_lifetime_high_temp"]
     pl_data_gen.error_in_max_abs_pos = model_config_save["error_in_max_abs_pos"]
     pl_data_gen.max_abs_pos_exp = model_config_save["max_abs_pos_exp"]
