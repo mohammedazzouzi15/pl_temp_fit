@@ -1,3 +1,4 @@
+
 import numpy as np
 import emcee
 
@@ -49,7 +50,7 @@ class ensemble_sampler(emcee.EnsembleSampler):
         if np.any(np.isnan(log_prob)):
             raise ValueError("Probability function returned NaN")
 
-        return log_prob, None
+        return log_prob, log_prob
 
 
 class hDFBackend_2(emcee.backends.HDFBackend):

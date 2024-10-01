@@ -1,22 +1,31 @@
+"""This module contains functions to save and load the model configuration.
+
+and the data used for the fit.
+The model configuration is saved in a json file and the data is saved in a csv file.
+The model configuration is used to generate the data and the data is used to fit the model.
+"""
+
+import datetime
 import json
 import os
-import datetime
 import uuid
-import numpy as np
+from pathlib import Path
+
+from pl_temp_fit import Exp_data_utils
 
 
 def save_model_config(
-    csv_name_PL="",
-    csv_name_EL="",
+    csv_name_pl="",
+    csv_name_el="",
     Temp_std_err=0.1,
     hws_std_err=0.005,
-    relative_intensity_std_error_PL=0.001,
-    relative_intensity_std_error_EL=0.001,
-    temperature_list_PL=[],
-    hws_PL=[],
-    temperature_list_EL=[],
-    hws_EL=[],
-    sigma=0.01,
+    relative_intensity_std_error_pl=0.001,
+    relative_intensity_std_error_el=0.001,
+    temperature_list_pl=[],
+    hws_pl=[],
+    temperature_list_el=[],
+    hws_el=[],
+    noise_sigma=0.01,
     fixed_parameters_dict={},
     params_to_fit_init={},
     min_bounds={},
@@ -25,40 +34,52 @@ def save_model_config(
     coeff_spread=0.5,
     nsteps=10000,
     num_coords=32,
-    database_folder="fit_experimental_emcee_PL/fit_data_base/",
-    data_folder="fit_experimental_emcee_PL/fit_data/",
+    database_folder="fit_experimental_emcee_el/fit_data_base/",
+    data_folder="fit_experimental_emcee_el/fit_data/",
+    test_id="",
 ):
+    """Save the model configuration and the data used for the fit.
+    
+    Args:
+    ----
+        csv_name_pl (str): The path to the csv file containing the PL data.
+        csv_name_el (str): The path to the csv file containing the EL data.
+        Temp_std_err (float): The standard error of the temperature measurement.
+        hws_std_err (float): The standard error of the hws measurement.
+    relative_intensity_std_error_pl (float): The standard error of the PL relative intensity measurement.
+
+    """
     model_config = {
         "Temp_std_err": Temp_std_err,
         "hws_std_err": hws_std_err,
-        "relative_intensity_std_error_PL": relative_intensity_std_error_PL,
-        "relative_intensity_std_error_EL": relative_intensity_std_error_EL,
-        "temperature_list_PL": temperature_list_PL,
-        "hws_PL": hws_PL,
-        "temperature_list_EL": temperature_list_EL,
-        "hws_EL": hws_EL,
-        "sigma": sigma,
+        "relative_intensity_std_error_pl": relative_intensity_std_error_pl,
+        "relative_intensity_std_error_el": relative_intensity_std_error_el,
+        "temperature_list_pl": temperature_list_pl,
+        "hws_pl": hws_pl,
+        "temperature_list_el": temperature_list_el,
+        "hws_el": hws_el,
+        "noise_sigma": noise_sigma,
     }
-    print(f"size of hw is {hws_PL.shape}")
-    print(f"size of temperature_list is {temperature_list_PL.shape}")
+    print(f"size of hw is {hws_pl.shape}")
+    print(f"size of temperature_list is {temperature_list_pl.shape}")
     date = datetime.datetime.now().strftime("%Y_%m_%d")
-    test_id = str(uuid.uuid4())
+    if test_id == "":
+        test_id = str(uuid.uuid4())
     # generate the data
-    save_folder = (
-        data_folder
-        +  f"/{date}/{csv_name_PL.split('/')[-1].split('.')[0]}/"
-        + test_id
-    )
 
-    os.makedirs(save_folder, exist_ok=True)
+    save_folder = Path(data_folder, csv_name_pl.name.split(".")[0],test_id)
+    save_folder.mkdir(parents=True, exist_ok=True)
     # save _model_config
 
     # get initial covariance matrix
     # get covariance matrix for the experimental data
     model_config_save = model_config.copy()
-    model_config_save["save_folder"] = save_folder
-    model_config_save["csv_name_PL"] = csv_name_PL
-    model_config_save["csv_name_EL"] = csv_name_EL
+    model_config_save["save_folder"] = save_folder.absolute().as_posix()
+    model_config_save["csv_name_pl"] = csv_name_pl.absolute().as_posix()
+    if csv_name_el == "":
+        model_config_save["csv_name_el"] = ""
+    else:
+        model_config_save["csv_name_el"] = csv_name_el.absolute().as_posix()
     model_config_save["date"] = date
     model_config_save["test_id"] = test_id
     model_config_save["fixed_parameters_dict"] = fixed_parameters_dict
@@ -72,10 +93,10 @@ def save_model_config(
     model_config_save["nsteps"] = nsteps
     model_config_save["num_coords"] = num_coords
 
-    model_config_save.pop("temperature_list_PL")
-    model_config_save.pop("hws_PL")
-    model_config_save.pop("temperature_list_EL")
-    model_config_save.pop("hws_EL")
+    model_config_save.pop("temperature_list_pl")
+    model_config_save.pop("hws_pl")
+    model_config_save.pop("temperature_list_el")
+    model_config_save.pop("hws_el")
 
     os.makedirs(database_folder, exist_ok=True)
     with open(database_folder + f"/{test_id}.json", "w") as f:
@@ -83,24 +104,63 @@ def save_model_config(
 
     return model_config, test_id
 
+def updata_model_config(
+    test_id,
+    database_folder: Path,
+    model_config_save,
+):
+    with Path(database_folder, f"{test_id}.json").open("w") as f:
+        json.dump(model_config_save, f)
+
+    return test_id
+
 
 def load_model_config(
     test_id,
-    database_folder="/rds/general/user/hy2120/home/pl_temp_fit/fit_experimental_emcee_PL/fit_data_base/",
+    database_folder: Path,
 ):
-    with open(database_folder + f"/{test_id}.json", "r") as f:
+    with Path(database_folder,f"{test_id}.json").open("r") as f:
         model_config_save = json.load(f)
 
     model_config = {
         "Temp_std_err": 0,
         "hws_std_err": 0,
-        "relative_intensity_std_error_PL": 0,
-        "relative_intensity_std_error_EL": 0,
-        "sigma": 0,
+        "relative_intensity_std_error_pl": 0,
+        "relative_intensity_std_error_el": 0,
+        "noise_sigma": 0,
     }
 
-    for keys in model_config.keys():
-        model_config[keys] = model_config_save[keys]
+    for keys in model_config:
+        if keys in model_config_save:
+            model_config[keys] = model_config_save[keys]
+
+
+    import os
+    if "csv_name_pl" in model_config_save:
+       
+        csv_name = model_config_save["csv_name_pl"]
+        if os.path.exists(csv_name):
+            Exp_data, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
+                csv_name
+            )
+            model_config["temperature_list_pl"] = temperature_list_pl
+            model_config["hws_pl"] = hws_pl
+        else:
+            model_config["temperature_list_pl"] = []
+            model_config["hws_pl"] = []
+    if "csv_name_el" in model_config_save:
+       
+
+        csv_name = model_config_save["csv_name_el"]
+        if os.path.exists(csv_name):
+            Exp_data, temperature_list_el, hws_el = Exp_data_utils.read_data(
+                csv_name
+            )
+            model_config["temperature_list_el"] = temperature_list_el
+            model_config["hws_el"] = hws_el
+        else:
+            model_config["temperature_list_el"] = []
+            model_config["hws_el"] = []
 
     return model_config, model_config_save
 
