@@ -5,4 +5,4 @@
 cd /rds/general/user/hy2120/home/pl_temp_fit 
 module load anaconda3/personal 
 source activate pl_temp_fit     
-python src/pl_temp_fit/scripts/new_pl_sampling_60lifetime_abs.py --model_config_id 30751d6d-eaee-41bc-873a-b74ebb69e77b 
+python src/pl_temp_fit/scripts/new_pl_sampling_alllifetimes_abs.py --model_config_id d0abcab7-f28e-4f43-aae4-6de279345666 
