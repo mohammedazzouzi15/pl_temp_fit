@@ -29,7 +29,7 @@ class PLAbs(SpectralDataGeneration):
         log_prob = lp + log_like[0][0]
         log_prob += -(data.D.hw[data.D.alpha[:, -1].argmax()]   - self.max_abs_pos_exp)**2 / self.error_in_max_abs_pos**2/2
         if np.isnan(log_like) or np.isinf(log_like) or log_like is None:
-            return -np.inf, None, None, None, None,None# do not forget to return the correct number of outputs
+            return -np.inf, None, None, None, None, None# do not forget to return the correct number of outputs
         return (
             log_prob,
             log_like[0],
