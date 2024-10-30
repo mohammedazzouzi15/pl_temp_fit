@@ -22,10 +22,10 @@ def main(model_config_id):
     )
     # initialising the data generator
     pl_data_gen = PLAbs.PLAbs(temperature_list_pl,hws_pl)
-    pl_data_gen.error_in_lifetime_high_temp = model_config_save["error_in_lifetime_high_temp"]
+    #pl_data_gen.error_in_lifetime_high_temp = model_config_save["error_in_lifetime_high_temp"]
     pl_data_gen.error_in_max_abs_pos = model_config_save["error_in_max_abs_pos"]
     pl_data_gen.max_abs_pos_exp = model_config_save["max_abs_pos_exp"]
-    pl_data_gen.lifetime_exp_high_temp = model_config_save["lifetime_exp_high_temp"]
+    #pl_data_gen.lifetime_exp_high_temp = model_config_save["lifetime_exp_high_temp"]
     pl_data_gen.update_with_model_config(model_config_save)
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     # getting the maximum likelihood estimate
@@ -46,7 +46,7 @@ def main(model_config_id):
         nsteps=model_config_save["nsteps"],
         coeff_spread=model_config_save["coeff_spread"],
         num_coords=model_config_save["num_coords"],
-        restart_sampling=False,
+        restart_sampling=True,
     )
 
 
