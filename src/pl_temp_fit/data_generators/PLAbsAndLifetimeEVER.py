@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from pl_temp_fit.data_generators.SpectralDataGeneration import SpectralDataGeneration
 
-class PLAbsAndLifetime(SpectralDataGeneration):
+class PLAbsAndLifetimeEVERY(SpectralDataGeneration):
     def __init__(self, temperature_list, hws_list):
         super().__init__(temperature_list, hws_list)
         self.dtypes = [
