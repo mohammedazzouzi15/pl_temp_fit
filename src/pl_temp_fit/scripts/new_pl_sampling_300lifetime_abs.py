@@ -6,6 +6,7 @@ from pl_temp_fit import (
     fit_pl_utils,
 )
 from pl_temp_fit.data_generators import PLAbsAndLifetime
+from pathlib import Path
 
 
 def main(model_config_id):
@@ -15,6 +16,7 @@ def main(model_config_id):
     )
     csv_name_pl = model_config_save["csv_name_pl"]
     save_folder = model_config_save["save_folder"]
+    Path(save_folder).mkdir(parents=True, exist_ok=True)
     # Load the data
     Exp_data_pl, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
         csv_name_pl

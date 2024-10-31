@@ -1,13 +1,15 @@
-from pl_temp_fit import Exp_data_utils
-import numpy as np
-from pl_temp_fit import config_utils
-from pl_temp_fit import (
-    covariance_utils,
-    fit_pl_utils,
-)
-from pl_temp_fit.data_generators import PLAbs
 import logging
 from pathlib import Path
+
+from pl_temp_fit import (
+    Exp_data_utils,
+    config_utils,
+    fit_pl_utils,
+)
+from pl_temp_fit.data_generators import PLAbsAndLifetimeEVER
+
+logging.basicConfig(level=logging.INFO)
+
 
 def main(model_config_id):
     model_config, model_config_save = config_utils.load_model_config(
@@ -17,42 +19,54 @@ def main(model_config_id):
     csv_name_pl = model_config_save["csv_name_pl"]
     save_folder = model_config_save["save_folder"]
     Path(save_folder).mkdir(parents=True, exist_ok=True)
-
     # Load the data
     Exp_data_pl, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
         csv_name_pl
     )
     # initialising the data generator
-    pl_data_gen = PLAbs.PLAbs(temperature_list_pl, hws_pl)
-    # pl_data_gen.error_in_lifetime_high_temp = model_config_save["error_in_lifetime_high_temp"]
+    pl_data_gen = PLAbsAndLifetimeEVER.PLAbsAndLifetimeEVER(
+        temperature_list_pl, hws_pl
+    )
+    pl_data_gen.relative_error_lifetime = model_config_save[
+        "relative_error_lifetime"
+    ]
     pl_data_gen.error_in_max_abs_pos = model_config_save[
         "error_in_max_abs_pos"
     ]
     pl_data_gen.max_abs_pos_exp = model_config_save["max_abs_pos_exp"]
-    # pl_data_gen.lifetime_exp_high_temp = model_config_save["lifetime_exp_high_temp"]
+    pl_data_gen.temperature_lifetimes_exp = model_config_save[
+        "temperature_lifetimes_exp"
+    ]
+
     pl_data_gen.update_with_model_config(model_config_save)
+    logging.info(pl_data_gen.temperature_lifetimes_exp[300])
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+
     # getting the maximum likelihood estimate
     logging.info("loading the file successfully")
-    logging.info("Getting maximum likelihood estimate")
-    soln_min = pl_data_gen.get_maximum_likelihood_estimate(
-        Exp_data_pl,
-        co_var_mat_pl,
-        save_folder,
-        coeff_spread=0.1,
-        num_coords=32,
-    )
-    pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
-        pl_data_gen.params_to_fit_init, soln_min.x
-    )
-    co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+    get_maximum_likelihood_estimate = False
+    assert get_maximum_likelihood_estimate == False
+    if get_maximum_likelihood_estimate:
+        logging.info("Getting maximum likelihood estimate")
+        soln_min = pl_data_gen.get_maximum_likelihood_estimate(
+            Exp_data_pl,
+            co_var_mat_pl,
+            save_folder,
+            coeff_spread=0.1,
+            num_coords=32,
+        )
+
+        pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
+            pl_data_gen.params_to_fit_init, soln_min.x
+        )
+        co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     logging.info("Running sampler")
     fit_pl_utils.run_sampler_parallel(
         save_folder,
         Exp_data_pl,
         co_var_mat_pl,
         pl_data_gen,
-        nsteps=model_config_save["nsteps"],
+        nsteps=5,
         coeff_spread=model_config_save["coeff_spread"],
         num_coords=model_config_save["num_coords"],
         restart_sampling=True,
@@ -62,7 +76,7 @@ def main(model_config_id):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run the PL sample fitting")
+    parser = argparse.ArgumentParser(description="Run the EL sample fitting")
     parser.add_argument(
         "--model_config_id",
         type=str,

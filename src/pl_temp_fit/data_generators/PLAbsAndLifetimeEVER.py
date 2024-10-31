@@ -1,7 +1,9 @@
 """Class to fit the PL data with a model that includes the absorption peak and lifetime parameters for all temps HY 08/10/2024."""
 
-from pathlib import Path
+import logging
+
 import numpy as np
+
 from pl_temp_fit.data_generators.SpectralDataGeneration import (
     SpectralDataGeneration,
 )
@@ -45,9 +47,29 @@ class PLAbsAndLifetimeEVER(SpectralDataGeneration):
             temp: self.relative_error_lifetime * lifetime
             for temp, lifetime in self.temperature_lifetimes_exp.items()
         }
+        self.check_available_lifetime()
+
+    def update_with_model_config(self, model_config):
+        super().update_with_model_config(model_config)
+        self.check_available_lifetime()
+
+    def check_available_lifetime(self):
+        temperature_lifetimes_exp = {}
+        # change the keys of the dictionary to integers
+        self.temperature_lifetimes_exp = {int(k): v for k, v in self.temperature_lifetimes_exp.items()}
+        for temp, exp_lifetime in self.temperature_lifetimes_exp.items():
+            index = np.argwhere(self.temperature_list == temp)
+            if index is None:
+                logging.debug(f"Temperature {temp} not found in the data")
+            else:
+                logging.debug(f"index: {index}")
+                logging.debug(f"Temperature {temp} found in the data")
+                temperature_lifetimes_exp[temp] = exp_lifetime
+        self.temperature_lifetimes_exp = temperature_lifetimes_exp
+        return None
 
     def log_probability(self, theta, exp_data, inv_co_var_mat_pl):
-        """this is an example of a log probability function for the model."""
+        """This is an example of a log probability function for the model."""
         lp = self.log_prior(theta)
         if lp == -np.inf:
             return (
@@ -88,23 +110,16 @@ class PLAbsAndLifetimeEVER(SpectralDataGeneration):
         lifetime_errors = []
 
         for temp, exp_lifetime in self.temperature_lifetimes_exp.items():
-            try:
-                index = np.where(self.temperature_list == temp)[0][0]
-                calculated_lifetime = 1 / (
-                    data.EX.knr[0][index] + data.EX.kr[index]
-                )
-                error_in_lifetime = self.error_in_lifetimes[temp]
-                lifetime_error = (calculated_lifetime - exp_lifetime) ** 2 / (
-                    2 * error_in_lifetime**2
-                )
-                log_prob -= lifetime_error
-                lifetime_errors.append(calculated_lifetime)
-            except IndexError:
-                print(f"Temp {temp} not found in the list.")
-
-        #        log_prob += -(data.D.hw[data.D.alpha[:, -1].argmax()]   - self.max_abs_pos_exp)**2 / self.error_in_max_abs_pos**2/2
-        #        exciton_lifetime = 1/ (data.EX.knr[0][-1] + data.EX.kr[-1])
-        #        log_prob += -(exciton_lifetime - self.lifetime_exp_high_temp)**2 / self.error_in_lifetime_high_temp**2/2
+            index = np.argwhere(self.temperature_list == temp)[0][0]
+            calculated_lifetime = 1 / (
+                data.EX.knr[0][index] + data.EX.kr[index]
+            )
+            error_in_lifetime = self.error_in_lifetimes[temp]
+            lifetime_error = (calculated_lifetime - exp_lifetime) ** 2 / (
+                2 * error_in_lifetime**2
+            )
+            log_prob -= lifetime_error
+            lifetime_errors.append(calculated_lifetime)
 
         if np.isnan(log_like) or np.isinf(log_like) or log_like is None:
             return (
