@@ -39,7 +39,7 @@ def save_model_config(
     test_id="",
 ):
     """Save the model configuration and the data used for the fit.
-    
+
     Args:
     ----
         csv_name_pl (str): The path to the csv file containing the PL data.
@@ -67,7 +67,7 @@ def save_model_config(
         test_id = str(uuid.uuid4())
     # generate the data
 
-    save_folder = Path(data_folder, csv_name_pl.name.split(".")[0],test_id)
+    save_folder = Path(data_folder, csv_name_pl.name.split(".")[0], test_id)
     save_folder.mkdir(parents=True, exist_ok=True)
     # save _model_config
 
@@ -100,9 +100,10 @@ def save_model_config(
 
     os.makedirs(database_folder, exist_ok=True)
     with open(database_folder + f"/{test_id}.json", "w") as f:
-        json.dump(model_config_save, f)
+        json.dump(model_config_save, f, indent=4)
 
     return model_config, test_id
+
 
 def updata_model_config(
     test_id,
@@ -110,7 +111,7 @@ def updata_model_config(
     model_config_save,
 ):
     with Path(database_folder, f"{test_id}.json").open("w") as f:
-        json.dump(model_config_save, f)
+        json.dump(model_config_save, f, indent=4)
 
     return test_id
 
@@ -119,7 +120,7 @@ def load_model_config(
     test_id,
     database_folder: Path,
 ):
-    with Path(database_folder,f"{test_id}.json").open("r") as f:
+    with Path(database_folder, f"{test_id}.json").open("r") as f:
         model_config_save = json.load(f)
 
     model_config = {
@@ -134,10 +135,9 @@ def load_model_config(
         if keys in model_config_save:
             model_config[keys] = model_config_save[keys]
 
-
     import os
+
     if "csv_name_pl" in model_config_save:
-       
         csv_name = model_config_save["csv_name_pl"]
         if os.path.exists(csv_name):
             Exp_data, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
@@ -149,8 +149,6 @@ def load_model_config(
             model_config["temperature_list_pl"] = []
             model_config["hws_pl"] = []
     if "csv_name_el" in model_config_save:
-       
-
         csv_name = model_config_save["csv_name_el"]
         if os.path.exists(csv_name):
             Exp_data, temperature_list_el, hws_el = Exp_data_utils.read_data(

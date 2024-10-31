@@ -8,7 +8,6 @@ from pl_temp_fit import (
 from pl_temp_fit.data_generators import PLAbsAndLifetime
 
 
-
 def main(model_config_id):
     model_config, model_config_save = config_utils.load_model_config(
         model_config_id,
@@ -21,11 +20,19 @@ def main(model_config_id):
         csv_name_pl
     )
     # initialising the data generator
-    pl_data_gen = PLAbsAndLifetime.PLAbsAndLifetime(temperature_list_pl,hws_pl)
-    pl_data_gen.relative_error_lifetime = model_config_save["relative_error_lifetime"]
-    pl_data_gen.error_in_max_abs_pos = model_config_save["error_in_max_abs_pos"]
+    pl_data_gen = PLAbsAndLifetime.PLAbsAndLifetime(
+        temperature_list_pl, hws_pl
+    )
+    pl_data_gen.relative_error_lifetime = model_config_save[
+        "relative_error_lifetime"
+    ]
+    pl_data_gen.error_in_max_abs_pos = model_config_save[
+        "error_in_max_abs_pos"
+    ]
     pl_data_gen.max_abs_pos_exp = model_config_save["max_abs_pos_exp"]
-    pl_data_gen.temperature_lifetimes_exp = model_config_save["temperature_lifetimes_exp"]
+    pl_data_gen.temperature_lifetimes_exp = model_config_save[
+        "temperature_lifetimes_exp"
+    ]
     pl_data_gen.update_with_model_config(model_config_save)
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     # getting the maximum likelihood estimate
@@ -36,7 +43,9 @@ def main(model_config_id):
         coeff_spread=0.1,
         num_coords=32,
     )
-    pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(pl_data_gen.params_to_fit_init, soln_min.x)
+    pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
+        pl_data_gen.params_to_fit_init, soln_min.x
+    )
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     fit_pl_utils.run_sampler_parallel(
         save_folder,
@@ -52,6 +61,7 @@ def main(model_config_id):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Run the EL sample fitting")
     parser.add_argument(
         "--model_config_id",
