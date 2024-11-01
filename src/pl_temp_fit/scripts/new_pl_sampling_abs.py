@@ -34,18 +34,22 @@ def main(model_config_id):
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     # getting the maximum likelihood estimate
     logging.info("loading the file successfully")
-    logging.info("Getting maximum likelihood estimate")
-    soln_min = pl_data_gen.get_maximum_likelihood_estimate(
-        Exp_data_pl,
-        co_var_mat_pl,
-        save_folder,
-        coeff_spread=0.1,
-        num_coords=32,
-    )
-    pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
-        pl_data_gen.params_to_fit_init, soln_min.x
-    )
-    co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+    get_maximum_likelihood_estimate = False
+    if get_maximum_likelihood_estimate:
+        logging.info("Getting maximum likelihood estimate")
+        soln_min = pl_data_gen.get_maximum_likelihood_estimate(
+            Exp_data_pl,
+            co_var_mat_pl,
+            save_folder,
+            coeff_spread=0.1,
+            num_coords=32,
+        )
+
+        pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
+            pl_data_gen.params_to_fit_init, soln_min.x
+        )
+        co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+    logging.info("Running sampler")
     logging.info("Running sampler")
     fit_pl_utils.run_sampler_parallel(
         save_folder,
