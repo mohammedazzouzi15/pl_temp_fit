@@ -1,0 +1,70 @@
+{
+    "Temp_std_err": 5,
+    "hws_std_err": 0.005,
+    "relative_intensity_std_error_pl": 0.05,
+    "relative_intensity_std_error_el": 0.001,
+    "noise_sigma": 0.01,
+    "save_folder": "/home/mazzouzi/pl_temp_fit/fit_experimental_emcee_pl/fit_data/ITIC-300K-2_G0_650.0nm_1450.0nm_12-07-2024-10h-44m_Exposure_3.0s_mod_split0_split500/new_pl_sampling_alllifetimes_abs/9f97c9a5-76ce-4db3-a03a-ae4211055032",
+    "csv_name_pl": "/home/mazzouzi/pl_temp_fit/dat_hanbo_311024/csv/ITIC-300K-2_G0_650.0nm_1450.0nm_12-07-2024-10h-44m_Exposure_3.0s_mod_split0_split500.csv",
+    "csv_name_el": "",
+    "date": "2024_10_30",
+    "test_id": "9f97c9a5-76ce-4db3-a03a-ae4211055032",
+    "fixed_parameters_dict": {
+        "EX": {
+            "numbrstates": 20
+        },
+        "CT": {
+            "off": 1
+        },
+        "D": {}
+    },
+    "params_to_fit_init": {
+        "EX": {
+            "E": 1.67,
+            "sigma": 0.1,
+            "Li": 0.078,
+            "Lo": 0.11,
+            "hO": 0.15
+        },
+        "CT": {},
+        "D": {}
+    },
+    "min_bounds": {
+        "EX": {
+            "E": 1.6,
+            "sigma": 0.001,
+            "Li": 0.01,
+            "Lo": 0.01,
+            "hO": 0.14
+        },
+        "CT": {},
+        "D": {}
+    },
+    "max_bounds": {
+        "EX": {
+            "E": 1.75,
+            "sigma": 0.2,
+            "Li": 0.2,
+            "Lo": 0.2,
+            "hO": 0.155
+        },
+        "CT": {},
+        "D": {}
+    },
+    "num_iteration_max_likelihood": 5,
+    "coeff_spread": 0.5,
+    "nsteps": 15000,
+    "num_coords": 32,
+    "max_abs_pos_exp": 1.77,
+    "error_in_max_abs_pos": 0.01,
+    "temperature_lifetimes_exp": {
+        "300": 3.2e-10,
+        "260": 4.1e-10,
+        "220": 5.1e-10,
+        "180": 7.2e-10,
+        "140": 8.9e-10,
+        "100": 1.1e-09,
+        "60": 1.1e-09
+    },
+    "relative_error_lifetime": 0.05
+}

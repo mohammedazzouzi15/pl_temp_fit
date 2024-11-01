@@ -7,6 +7,8 @@ from pl_temp_fit import (
 )
 from pl_temp_fit.data_generators import PLAbsAndLifetime60K
 from pathlib import Path
+import logging
+
 
 def main(model_config_id):
     model_config, model_config_save = config_utils.load_model_config(
@@ -24,30 +26,36 @@ def main(model_config_id):
     pl_data_gen = PLAbsAndLifetime60K.PLAbsAndLifetime60K(
         temperature_list_pl, hws_pl
     )
-    pl_data_gen.relative_error_lifetime = model_config_save[
+    pl_data_gen.error_in_lifetime_high_temp = model_config_save[
         "relative_error_lifetime"
     ]
     pl_data_gen.error_in_max_abs_pos = model_config_save[
         "error_in_max_abs_pos"
     ]
     pl_data_gen.max_abs_pos_exp = model_config_save["max_abs_pos_exp"]
-    pl_data_gen.temperature_lifetimes_exp = model_config_save[
-        "temperature_lifetimes_exp"
-    ]
+
     pl_data_gen.update_with_model_config(model_config_save)
+    pl_data_gen.lifetime_exp_high_temp = model_config_save[
+        "temperature_lifetimes_exp"
+    ]["60"]
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     # getting the maximum likelihood estimate
-    soln_min = pl_data_gen.get_maximum_likelihood_estimate(
-        Exp_data_pl,
-        co_var_mat_pl,
-        save_folder,
-        coeff_spread=0.1,
-        num_coords=32,
-    )
-    pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
-        pl_data_gen.params_to_fit_init, soln_min.x
-    )
-    co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+    get_maximum_likelihood_estimate = False
+    if get_maximum_likelihood_estimate:
+        logging.info("Getting maximum likelihood estimate")
+        soln_min = pl_data_gen.get_maximum_likelihood_estimate(
+            Exp_data_pl,
+            co_var_mat_pl,
+            save_folder,
+            coeff_spread=0.1,
+            num_coords=32,
+        )
+
+        pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
+            pl_data_gen.params_to_fit_init, soln_min.x
+        )
+        co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+    logging.info("Running sampler")
     fit_pl_utils.run_sampler_parallel(
         save_folder,
         Exp_data_pl,

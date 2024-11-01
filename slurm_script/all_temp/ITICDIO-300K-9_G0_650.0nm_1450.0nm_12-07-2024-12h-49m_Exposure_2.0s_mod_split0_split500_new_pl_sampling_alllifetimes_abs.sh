@@ -7,4 +7,4 @@
 #SBATCH --time=12:30:00
 conda activate /home/mazzouzi/miniconda3/envs/pl_temp_fit
 cd /home/mazzouzi/pl_temp_fit 
- srun python src/pl_temp_fit/scripts/new_pl_sampling_alllifetimes_abs.py --model_config_id 6ecb03ab-0512-4de7-9e42-11440cfd11be1 
+ srun python src/pl_temp_fit/scripts/new_pl_sampling_alllifetimes_abs.py --model_config_id allLifetimes/20e30f8a-fad4-458f-90ee-a2a2a7a29b8b 
