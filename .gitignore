@@ -65,3 +65,4 @@ slurm_script/output/*
 *.h5
 src/pl_temp_fit/fit_el_utils.py
 src/pl_temp_fit/fit_PL_utils.py
+src/pl_temp_fit/fit_PL_utils.py
