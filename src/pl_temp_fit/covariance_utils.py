@@ -33,13 +33,13 @@ def add_plot_to_ax(hws, temperature_list, ax, model_data):
 
 
 def get_covariance_matrix(true_model_pl_list, numnber_of_samples, model_config):
-    variance = np.var(np.array(true_model_pl_list), axis=0)+ model_config["noise_sigma"]
+    variance = np.var(np.array(true_model_pl_list), axis=0)+ model_config["sigma"]
     co_var_mat_test = np.cov(
         np.array(true_model_pl_list).reshape(numnber_of_samples, -1),
         rowvar=False,
     )
     np.fill_diagonal(
-        co_var_mat_test, co_var_mat_test.diagonal() +model_config["noise_sigma"]
+        co_var_mat_test, co_var_mat_test.diagonal() +model_config["sigma"]
     )
     return co_var_mat_test, variance
 

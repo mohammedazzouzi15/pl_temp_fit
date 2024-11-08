@@ -100,7 +100,7 @@ class Data:
             E=1.4,
             vmhigh=2,
             vmlow=15,
-            sigma=0.01,
+            sigma=0.02,
             numbrstates=20,
             off=0,
             Li=0.1,  # Fix: Changed 'LI' to 'Li'
@@ -113,7 +113,7 @@ class Data:
             vmhigh=2,
             vmlow=15,
             sigma=0.01,
-            numbrstates=1,
+            numbrstates=20,
             off=1,
             Li=0.1,  # Fix: Changed 'LI' to 'Li'
             Lo=0.1,
@@ -180,7 +180,7 @@ class State:
         hO=0.15,
         fosc=0.5,
         dmus=3.0,
-        disorder_ext=0.09,
+        disorder_ext=0.05,
     ):
         self.E = E  # mean energy of the state
         self.knr = 0
@@ -212,15 +212,11 @@ class State:
         return self.dmus * 3.33e-30 / 1.6e-19
 
     def calculate_DG0(self):
-        if self.numbrstates == 1:
-            return np.array([self.E])
-        
-        else:
-            return np.linspace(
-                self.E - self.disorder_ext,
-                self.E + self.disorder_ext,
-                self.numbrstates,
-            )
+        return np.linspace(
+            self.E - self.disorder_ext,
+            self.E + self.disorder_ext,
+            self.numbrstates,
+        )
 
     def calculate_fosc(self):
         self.fosc = 10**self.log_fosc

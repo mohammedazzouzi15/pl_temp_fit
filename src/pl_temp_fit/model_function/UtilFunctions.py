@@ -19,7 +19,7 @@ def FCWD_v(State, const, hw, T):
     energy_offset = min(State.DG0-0.5)
     temp, hw_mat, dg0_mat, final_mat, initial_mat = np.meshgrid(T, hw, State.DG0, w_array, t_array)
     hrf = HRF(State.Li, State.hO)
-    # hrf = hrf.numpy() if isinstance(hrf, at.tensor) else hrf 
+    # hrf = hrf.numpy() if isinstance(hrf, at.tensor) else hrf
 
     lag = np.zeros((len(t_array), len(w_array)))
 
@@ -101,18 +101,13 @@ def tdm(State, const):
 
 
 def Z_abs(State, xParam):
-    if State.numbrstates == 1:
-        dE = 0.01
-        integral = dE
-    else:
-        dE = State.DG0[1] - State.DG0[0]
-     # the difference in value between each value of DG0 used for the integral
+    dE = State.DG0[1] - State.DG0[0]  # the difference in value between each value of DG0 used for the integral
 
     # x * gauss + (1 - x) * exponential
-        integral = (
-                xParam["coeff"] * np.exp(-((State.DG0 - State.E) ** 2) / (2 * State.sigma**2))
-                + (1 - xParam["coeff"]) * np.exp(-(State.DG0 - State.E) / State.sigma)
-            ) * dE
+    integral = (
+        xParam["coeff"] * np.exp(-((State.DG0 - State.E) ** 2) / (2 * State.sigma**2))
+        + (1 - xParam["coeff"]) * np.exp(-(State.DG0 - State.E) / State.sigma)
+    ) * dE
 
     Zabs = np.sum(integral)
 
@@ -120,35 +115,19 @@ def Z_abs(State, xParam):
 
 
 def Z_rec(State, C, D, xParam):
+    dE = State.DG0[1] - State.DG0[0]  # the difference in value between each value of DG0 used for the integral
     energy_offset = min(State.DG0-0.5)
     int = np.zeros((len(State.DG0), len(D.T)))
-    
-    if State.numbrstates == 1:
-        dE = 0.01
-        for i in range(len(D.T)):
-            for j in range(len(State.DG0)):
-                int[j, i] = (
-                        (
-                            xParam["coeff"] * 1
-                            + (1 - xParam["coeff"]) * np.exp(-State.DG0[j] / (C.kb * D.T[i]))
-                        )
-                        * np.exp((-State.DG0[j]+energy_offset) / (C.kb * D.T[i]))
-                        * dE
-                    )
-        
-    else:
-        dE = State.DG0[1] - State.DG0[0]
-      # the difference in value between each value of DG0 used for the integral
-        for i in range(len(D.T)):
-            for j in range(len(State.DG0)):
-                int[j, i] = (
-                        (
-                            xParam["coeff"] * np.exp(-((State.DG0[j] - State.E) ** 2) / (2 * State.sigma**2))
-                            + (1 - xParam["coeff"]) * np.exp(-State.DG0[j] / (C.kb * D.T[i]))
-                        )
-                        * np.exp((-State.DG0[j]+energy_offset) / (C.kb * D.T[i]))
-                        * dE
-                    )
+    for i in range(len(D.T)):
+        for j in range(len(State.DG0)):
+            int[j, i] = (
+                (
+                    xParam["coeff"] * np.exp(-((State.DG0[j] - State.E) ** 2) / (2 * State.sigma**2))
+                    + (1 - xParam["coeff"]) * np.exp(-State.DG0[j] / (C.kb * D.T[i]))
+                )
+                * np.exp((-State.DG0[j]+energy_offset) / (C.kb * D.T[i]))
+                * dE
+            )
 
     Zrec = np.sum(int, axis=0)
 

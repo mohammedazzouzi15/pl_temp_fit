@@ -314,7 +314,7 @@ def plot_fit_to_experimental_data(
     relative_intensity_std_error_pl = model_config_save[
         "relative_intensity_std_error_pl"
     ]
-    noise_sigma = model_config_save["noise_sigma"]
+    sigma = model_config_save["sigma"]
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
@@ -395,7 +395,7 @@ def plot_fit_to_experimental_data_sameaxis(
     relative_intensity_std_error_pl = model_config_save[
         "relative_intensity_std_error_pl"
     ]
-    noise_sigma = model_config_save["noise_sigma"]
+    sigma = model_config_save["sigma"]
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
@@ -498,48 +498,8 @@ def plot_distribution(
     fig.tight_layout()
     return fig, axes
 
+
 def plot_distribution_multi(
-    reader, model_config_save, discard=10, filter_log_likelihood="",
-    fig=None, axes=None, legend_label='Test', color=None
-):
-    """Plot the distribution of the parameters from the sampling output."""
-    csv_name = model_config_save["csv_name_pl"]
-    label_list = []
-    min_bounds_list, max_bounds_list = [], []
-    
-    for key in model_config_save["params_to_fit_init"].keys():
-        label_list.extend([f"{key}_{x}" for x in model_config_save["params_to_fit_init"][key].keys()])
-        min_bounds_list.extend([model_config_save["min_bounds"][key][x] for x in model_config_save["params_to_fit_init"][key].keys()])
-        max_bounds_list.extend([model_config_save["max_bounds"][key][x] for x in model_config_save["params_to_fit_init"][key].keys()])
-
-    labels = label_list
-    ndim = len(labels)
-    distribution = reader.get_chain(discard=discard, flat=True)
-
-    if fig is None and axes is None:
-        fig, axes = plt.subplots(ndim, figsize=(10, 7))
-
-    colors = plt.cm.viridis(np.linspace(0, 1, ndim))  # Creates a color map
-    #colors = ['blue', 'green', 'red', 'cyan', 'magenta']
-    for i, ax in enumerate(axes):
-        ax.hist(
-            distribution[:, i],
-            bins=200,
-            color=colors[i],  # Use the color map
-            histtype="step",
-            label=f'{legend_label} {labels[i]}'
-        )
-        ax.set_ylabel(labels[i])
-        ax.set_xlim([min_bounds_list[i], max_bounds_list[i]])
-
-    axes[0].legend(loc="upper right")
-    fig.suptitle(f"Parameter distributions for {csv_name}")
-    fig.tight_layout()
-    plt.show()
-
-    return fig, axes
-                 
-def plot_distribution_multi_mo(
     reader, model_config_save, discard=10, filter_log_likelihood="",
     fig=None,axes=None,legend_label='test',color='C1'
 ):
@@ -596,7 +556,7 @@ def plot_distribution_multi_mo(
     axes[0].legend(loc="center left", bbox_to_anchor=(1, 0.5))
     fig.tight_layout()
     return fig, axes
-                 
+
 def plot_corner(reader, model_config_save, discard=10,
                 filter_log_likelihood=False):
     """plot the corner plot from the sampling output
@@ -622,5 +582,4 @@ def plot_corner(reader, model_config_save, discard=10,
     df_samples = pd.DataFrame(samples, columns=labels)
     g = sns.pairplot(df_samples, kind="hist", corner=True)
     g.fig.suptitle(f"Sampler corner plot for {csv_name.split('/')[-1]}")
-    plt.rcParams['axes.labelsize'] = 28
     return g.fig, g.axes

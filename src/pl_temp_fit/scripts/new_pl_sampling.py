@@ -34,7 +34,7 @@ def main(model_config_id):
         co_var_mat_pl,
         save_folder,
         coeff_spread=0.1,
-        num_coords=32,
+        num_coords=5,
     )
     pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(pl_data_gen.params_to_fit_init, soln_min.x)
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
@@ -52,7 +52,7 @@ def main(model_config_id):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Run the EL sample fitting")
+    parser = argparse.ArgumentParser(description="Run the PL sample fitting")
     parser.add_argument(
         "--model_config_id",
         type=str,

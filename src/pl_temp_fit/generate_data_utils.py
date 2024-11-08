@@ -29,7 +29,7 @@ def generate_data(
     hws_std_err,
     relative_intensity_std_error_pl,
     relative_intensity_std_error_el,
-    noise_sigma,
+    sigma,
     params_to_fit={},
     fixed_parameters_dict={},
 ):
@@ -113,7 +113,7 @@ def generate_data_pl(
     Temp_std_err,
     hws_std_err,
     relative_intensity_std_error_pl,
-    noise_sigma,
+    sigma,
     params_to_fit={},
     fixed_parameters_dict={},
     **kwargs,
