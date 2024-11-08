@@ -44,7 +44,6 @@ def main(model_config_id):
             coeff_spread=0.1,
             num_coords=32,
         )
-
         pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(
             pl_data_gen.params_to_fit_init, soln_min.x
         )

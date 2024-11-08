@@ -1,9 +1,10 @@
 """Class containing how to generate data for experimental data fitting."""
 
 import numpy as np
-from scipy.optimize import minimize
-
 from pl_temp_fit.model_function import LTL
+from scipy.linalg import inv
+from scipy.optimize import minimize
+from scipy.stats import norm
 
 
 class SpectralDataGeneration:
@@ -156,7 +157,7 @@ class SpectralDataGeneration:
         data_pl,
         inv_co_var_mat_pl,
     ):
-        """this is an example of a log probability function for the model."""
+        """This is an example of a log probability function for the model."""
         lp = self.log_prior(theta)
         if lp == -np.inf:
             return -np.inf, None, None, None, None
@@ -335,6 +336,10 @@ class SpectralDataGeneration:
                 print(f"  {key}_{key2} = {soln_min.x[counter]:.3f}")
                 counter += 1
         print("Maximum log likelihood:", soln.fun)
+        # Calculate the Fisher Information Matrix
+        hess_inv = soln_min.hess_inv
+        # Calculate the confidence intervals
+        confidence_intervals = self.get_confidence_intervals( hess_inv, soln_min)
         # print those into a file
         with open(save_folder + "/maximum_likelihood_estimate.txt", "w") as f:
             f.write("Maximum likelihood estimates:\n")
@@ -345,9 +350,32 @@ class SpectralDataGeneration:
                 for key2 in self.params_to_fit_init[key].keys():
                     f.write(f"  {key}_{key2} = {soln_min.x[counter]:.3f}")
                     counter += 1
+                    f.write(f"  Confidence interval: {confidence_intervals[counter]}")
 
             f.write(f"Maximum log likelihood: {soln_min.fun}\n")
         return soln_min
+
+    def get_confidence_intervals(self, hessian,soln_min, confidence_level=0.95):
+        # Calculate the inverse of the Hessian matrix
+        inv_hessian = inv(hessian)
+
+        # Calculate the standard errors (square roots of the diagonal elements)
+        standard_errors = np.sqrt(np.diag(inv_hessian))
+
+        # Calculate the z-score for the given confidence level
+        z_score = norm.ppf(1 - (1 - confidence_level) / 2)
+
+        # Calculate the confidence intervals
+        confidence_intervals = []
+        for i in range(len(standard_errors)):
+            confidence_intervals.append(
+                (
+                    soln_min.x[i] - z_score * standard_errors[i],
+                    soln_min.x[i] + z_score * standard_errors[i],
+                )
+            )
+
+        return confidence_intervals
 
     def get_init_coords(self, coeff_spread, num_coords):
         """Get the initial coordinates for the simple fit."""

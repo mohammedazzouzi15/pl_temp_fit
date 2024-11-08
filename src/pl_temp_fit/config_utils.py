@@ -197,7 +197,7 @@ def update_csv_name_pl(
     model_config_save["save_folder"] = (
         new_path_save_folder
         + "/"
-        + csv_name.split("/")[-1].replace(".csv", "")
+        + csv_name.split("/")[-1].replace(".csv", "")[:15]
         + "/"
         + script_to_run
         + "/"
