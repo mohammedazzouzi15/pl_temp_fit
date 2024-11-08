@@ -180,7 +180,7 @@ class State:
         hO=0.15,
         fosc=0.5,
         dmus=3.0,
-        disorder_ext=0.05,
+        disorder_ext=0.1,
     ):
         self.E = E  # mean energy of the state
         self.knr = 0
