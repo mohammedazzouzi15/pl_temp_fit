@@ -1,10 +1,12 @@
 """Class containing how to generate data for experimental data fitting."""
 
+import logging
+
 import numpy as np
-from pl_temp_fit.model_function import LTL
-from scipy.linalg import inv
 from scipy.optimize import minimize
 from scipy.stats import norm
+
+from pl_temp_fit.model_function import LTL
 
 
 class SpectralDataGeneration:
@@ -337,9 +339,8 @@ class SpectralDataGeneration:
                 counter += 1
         print("Maximum log likelihood:", soln.fun)
         # Calculate the Fisher Information Matrix
-        hess_inv = soln_min.hess_inv
         # Calculate the confidence intervals
-        confidence_intervals = self.get_confidence_intervals( hess_inv, soln_min)
+        confidence_intervals = self.get_confidence_intervals(soln_min)
         # print those into a file
         with open(save_folder + "/maximum_likelihood_estimate.txt", "w") as f:
             f.write("Maximum likelihood estimates:\n")
@@ -348,22 +349,25 @@ class SpectralDataGeneration:
                 if self.params_to_fit_init[key] == {}:
                     continue
                 for key2 in self.params_to_fit_init[key].keys():
-                    f.write(f"  {key}_{key2} = {soln_min.x[counter]:.3f}")
+                    f.write(f"  {key}_{key2} = {soln_min.x[counter]:.3f}\n")
+                    f.write(
+                        f"  Confidence interval: {confidence_intervals[counter]} \n"
+                    )
                     counter += 1
-                    f.write(f"  Confidence interval: {confidence_intervals[counter]}")
+                    
 
             f.write(f"Maximum log likelihood: {soln_min.fun}\n")
         return soln_min
 
-    def get_confidence_intervals(self, hessian,soln_min, confidence_level=0.95):
+    def get_confidence_intervals(self, soln_min, confidence_level=0.99):
         # Calculate the inverse of the Hessian matrix
-        inv_hessian = inv(hessian)
-
+        inv_hessian = soln_min.hess_inv.todense()
+        logging.debug(f"inv_hessian: {inv_hessian}")
         # Calculate the standard errors (square roots of the diagonal elements)
         standard_errors = np.sqrt(np.diag(inv_hessian))
 
         # Calculate the z-score for the given confidence level
-        z_score = norm.ppf(1 - (1 - confidence_level) / 2)
+        z_score = norm.ppf(1 - (confidence_level) / 2)
 
         # Calculate the confidence intervals
         confidence_intervals = []

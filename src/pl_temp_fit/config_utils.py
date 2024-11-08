@@ -25,7 +25,7 @@ def save_model_config(
     hws_pl=[],
     temperature_list_el=[],
     hws_el=[],
-    sigma=0.01,
+    noise_sigma=0.01,
     fixed_parameters_dict={},
     params_to_fit_init={},
     min_bounds={},
@@ -58,7 +58,7 @@ def save_model_config(
         "hws_pl": hws_pl,
         "temperature_list_el": temperature_list_el,
         "hws_el": hws_el,
-        "sigma": sigma,
+        "noise_sigma": noise_sigma,
     }
     print(f"size of hw is {hws_pl.shape}")
     print(f"size of temperature_list is {temperature_list_pl.shape}")
@@ -128,7 +128,7 @@ def load_model_config(
         "hws_std_err": 0,
         "relative_intensity_std_error_pl": 0,
         "relative_intensity_std_error_el": 0,
-        "sigma": 0,
+        "noise_sigma": 0,
     }
 
     for keys in model_config:
@@ -197,7 +197,7 @@ def update_csv_name_pl(
     model_config_save["save_folder"] = (
         new_path_save_folder
         + "/"
-        + csv_name.split("/")[-1].replace(".csv", "")[:15]
+        + csv_name.split("/")[-1].replace(".csv", "")
         + "/"
         + script_to_run
         + "/"

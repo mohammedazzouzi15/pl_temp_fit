@@ -63,3 +63,4 @@ slurm_script/error/*
 slurm_script/output/*
 *.h5
 fit_experimental_emcee_pl
+*.json

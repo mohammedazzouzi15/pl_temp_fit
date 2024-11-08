@@ -5,7 +5,7 @@ from pl_temp_fit import (
     covariance_utils,
     fit_pl_utils,
 )
-from pl_temp_fit.data_generators import PLAbsAndLifetimeEVER
+from pl_temp_fit.data_generators import PLAbsandAlllifetime
 from pathlib import Path
 
 import logging
@@ -24,7 +24,7 @@ def main(model_config_id):
         csv_name_pl
     )
     # initialising the data generator
-    pl_data_gen = PLAbsAndLifetimeEVER.PLAbsAndLifetimeEVER(
+    pl_data_gen = PLAbsandAlllifetime.PLAbsandAlllifetime(
         temperature_list_pl, hws_pl
     )
     pl_data_gen.relative_error_lifetime = model_config_save[
@@ -50,7 +50,7 @@ def main(model_config_id):
             co_var_mat_pl,
             save_folder,
             coeff_spread=0.1,
-            num_coords=32,
+            num_coords=5,
         )
 
         pl_data_gen.params_to_fit_init = fit_pl_utils.get_param_dict(

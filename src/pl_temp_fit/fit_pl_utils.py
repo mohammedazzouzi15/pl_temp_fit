@@ -263,6 +263,8 @@ def plot_exp_data_with_variance(
         axes.set_ylim(0, 1.1)
     fig.suptitle("PL")
     fig.tight_layout(h_pad=0.0)
+    #save the figure
+    
     return fig, axis
 
 
@@ -314,3 +316,4 @@ def plot_fit_limits(model_config, model_config_save):
             Exp_data,
         )
         fig.suptitle(title_list[_id])
+        fig.savefig(save_folder + f"/PL_fit{_id}.png")

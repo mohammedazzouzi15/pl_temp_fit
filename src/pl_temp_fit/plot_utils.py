@@ -314,7 +314,7 @@ def plot_fit_to_experimental_data(
     relative_intensity_std_error_pl = model_config_save[
         "relative_intensity_std_error_pl"
     ]
-    sigma = model_config_save["sigma"]
+    noise_sigma = model_config_save["noise_sigma"]
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
@@ -395,7 +395,7 @@ def plot_fit_to_experimental_data_sameaxis(
     relative_intensity_std_error_pl = model_config_save[
         "relative_intensity_std_error_pl"
     ]
-    sigma = model_config_save["sigma"]
+    noise_sigma = model_config_save["noise_sigma"]
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
