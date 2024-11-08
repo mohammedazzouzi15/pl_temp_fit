@@ -6,9 +6,11 @@ from pl_temp_fit import (
     config_utils,
     fit_pl_utils,
 )
-from pl_temp_fit.data_generators import PLAbsAndLifetimeEVER
+from pl_temp_fit.data_generators import PLAbsandAlllifetime
 import emcee
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
 
 class TestPLSampler(unittest.TestCase):
     def setUp(self):
@@ -26,7 +28,7 @@ class TestPLSampler(unittest.TestCase):
         self.Exp_data_pl, self.temperature_list_pl, self.hws_pl = (
             Exp_data_utils.read_data(self.csv_name_pl)
         )
-        self.pl_data_gen = PLAbsAndLifetimeEVER.PLAbsAndLifetimeEVER(
+        self.pl_data_gen = PLAbsandAlllifetime.PLAbsandAlllifetime(
             self.temperature_list_pl, self.hws_pl
         )
         self.pl_data_gen.relative_error_lifetime = self.model_config_save[
@@ -44,21 +46,27 @@ class TestPLSampler(unittest.TestCase):
         self.pl_data_gen.update_with_model_config(self.model_config_save)
 
     def test_load_model_config(self):
+        logging.debug("model_config: ", self.model_config)
+        logging.debug("model_config_save: ", self.model_config_save)
         self.assertIsNotNone(self.model_config)
         self.assertIsNotNone(self.model_config_save)
 
     def test_read_data(self):
+        logging.debug("Exp_data_pl: ", self.Exp_data_pl)
+        logging.debug("hws_pl: ", self.hws_pl)
         self.assertIsNotNone(self.Exp_data_pl)
         self.assertIsNotNone(self.temperature_list_pl)
         self.assertIsNotNone(self.hws_pl)
 
     def test_update_with_model_config(self):
+        logging.debug("temperature_lifetimes_exp: ", self.pl_data_gen.temperature_lifetimes_exp)
         self.assertEqual(
-            self.pl_data_gen.temperature_lifetimes_exp.values,
-            self.model_config_save["temperature_lifetimes_exp"].values,
+            self.pl_data_gen.temperature_lifetimes_exp.values(),
+            self.model_config_save["temperature_lifetimes_exp"].values(),
         )
 
     def test_get_covariance_matrix(self):
+        
         co_var_mat_pl, variance_pl = self.pl_data_gen.get_covariance_matrix()
         self.assertIsNotNone(co_var_mat_pl)
         self.assertIsNotNone(variance_pl)
@@ -86,6 +94,17 @@ class TestPLSampler(unittest.TestCase):
             distribution.shape[1], self.model_config_save["num_coords"]
         )
         self.assertEqual(distribution.shape[2], 5)
+
+    def read_blobs(self):
+        filename = self.model_config_save["save_folder"] + "/sampler.h5"
+        reader = emcee.backends.HDFBackend(filename, name="multi_core")
+        blobs = reader.get_blobs(discard=0)
+        self.assertIsNotNone(blobs)
+        self.assertEqual(blobs.shape[0], 5)
+        self.assertEqual(
+            blobs.shape[1], self.model_config_save["num_coords"]
+        )
+        self.assertEqual(blobs.shape[2], len(self.pl_data_gen.temperature_lifetimes_exp.keys())*2)
 
         # Add assertions to verify the results of the sampler if possible
 

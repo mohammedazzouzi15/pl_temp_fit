@@ -39,7 +39,7 @@ def save_model_config(
     test_id="",
 ):
     """Save the model configuration and the data used for the fit.
-    
+
     Args:
     ----
         csv_name_pl (str): The path to the csv file containing the PL data.
@@ -67,7 +67,7 @@ def save_model_config(
         test_id = str(uuid.uuid4())
     # generate the data
 
-    save_folder = Path(data_folder, csv_name_pl.name.split(".")[0],test_id)
+    save_folder = Path(data_folder, csv_name_pl.name.split(".")[0], test_id)
     save_folder.mkdir(parents=True, exist_ok=True)
     # save _model_config
 
@@ -104,6 +104,7 @@ def save_model_config(
 
     return model_config, test_id
 
+
 def updata_model_config(
     test_id,
     database_folder: Path,
@@ -119,7 +120,7 @@ def load_model_config(
     test_id,
     database_folder: Path,
 ):
-    with Path(database_folder,f"{test_id}.json").open("r") as f:
+    with Path(database_folder, f"{test_id}.json").open("r") as f:
         model_config_save = json.load(f)
 
     model_config = {
@@ -134,10 +135,9 @@ def load_model_config(
         if keys in model_config_save:
             model_config[keys] = model_config_save[keys]
 
-
     import os
+
     if "csv_name_pl" in model_config_save:
-       
         csv_name = model_config_save["csv_name_pl"]
         if os.path.exists(csv_name):
             Exp_data, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
@@ -149,8 +149,6 @@ def load_model_config(
             model_config["temperature_list_pl"] = []
             model_config["hws_pl"] = []
     if "csv_name_el" in model_config_save:
-       
-
         csv_name = model_config_save["csv_name_el"]
         if os.path.exists(csv_name):
             Exp_data, temperature_list_el, hws_el = Exp_data_utils.read_data(
@@ -171,3 +169,38 @@ def get_dict_params(model_config):
     min_bound = model_config["min_bounds"]
     max_bound = model_config["max_bounds"]
     return fixed_parameters_dict, params_to_fit, min_bound, max_bound
+
+
+def update_csv_name_pl(
+    model_config_save,
+    csv_name,
+    new_path,
+    new_path_save_folder,
+    script_to_run,
+    test_id,
+):
+    """Updates the 'csv_name_pl' and 'save_folder' fields in the model configuration dictionary.
+
+    Args:
+        model_config_save (dict): The model configuration dictionary to be updated.
+        csv_name (str): The original CSV file name with its path.
+        new_path (str): The new path where the CSV file will be saved.
+        new_path_save_folder (str): The new path for the save folder.
+        script_to_run (str): The name of the script to be run.
+        test_id (str): The test identifier.
+
+    Returns:
+        dict: The updated model configuration dictionary with new 'csv_name_pl' and 'save_folder' fields.
+
+    """
+    model_config_save["csv_name_pl"] = new_path + "/" + csv_name.split("/")[-1]
+    model_config_save["save_folder"] = (
+        new_path_save_folder
+        + "/"
+        + csv_name.split("/")[-1].replace(".csv", "")
+        + "/"
+        + script_to_run
+        + "/"
+        + test_id
+    )
+    return model_config_save
