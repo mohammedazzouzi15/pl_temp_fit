@@ -58,7 +58,7 @@ def main(model_config_id):
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     # getting the maximum likelihood estimate
     logging.info("loading the file successfully")
-    get_maximum_likelihood_estimate = True
+    get_maximum_likelihood_estimate = False
     if get_maximum_likelihood_estimate:
         logging.info("Getting maximum likelihood estimate")
         soln_min = pl_data_gen.get_maximum_likelihood_estimate(
@@ -82,7 +82,7 @@ def main(model_config_id):
         nsteps=model_config_save["nsteps"],
         coeff_spread=model_config_save["coeff_spread"],
         num_coords=model_config_save["num_coords"],
-        restart_sampling=True,
+        restart_sampling=False,
     )
 
 

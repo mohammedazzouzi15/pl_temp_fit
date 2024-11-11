@@ -4,10 +4,13 @@ import emcee
 import numpy as np
 import time
 from multiprocess import Pool
-from pl_temp_fit.data_generators.SpectralDataGeneration import SpectralDataGeneration
+from pl_temp_fit.data_generators.SpectralDataGeneration import (
+    SpectralDataGeneration,
+)
+
 
 def get_initial_coords(
-    data_generator:SpectralDataGeneration,
+    data_generator: SpectralDataGeneration,
     coeff_spread,
     num_coords,
     save_folder,
@@ -100,6 +103,10 @@ def run_sampling_in_parallel(
             backend=backend,
             pool=pool,
             blobs_dtype=dtype,
+            moves=[
+                (emcee.moves.DEMove(), 0.8),
+                (emcee.moves.DESnookerMove(), 0.2),
+            ],
         )
         # Now we'll sample for up to max_n steps
         for _ in sampler.sample(
