@@ -1,17 +1,33 @@
-from pl_temp_fit import Exp_data_utils
-import numpy as np
-from pl_temp_fit import config_utils
+import logging
+from pathlib import Path
+
 from pl_temp_fit import (
-    covariance_utils,
+    Exp_data_utils,
+    config_utils,
     fit_pl_utils,
 )
 from pl_temp_fit.data_generators import PLAbsandAlllifetime
-from pathlib import Path
-
-import logging
 
 logging.basicConfig(level=logging.INFO)
+
+
 def main(model_config_id):
+    """Perform photoluminescence (PL) data fitting and sampling. With all lifetimes and absorption.
+
+    Args:
+    ----
+        model_config_id (str): Identifier for the model configuration to be loaded.
+    This function performs the following steps:
+    1. Loads the model configuration using the provided model_config_id.
+    2. Loads experimental PL data from a CSV file specified in the model configuration.
+    3. Initializes a PL data generator with the loaded experimental data.
+    4. Updates the data generator with parameters from the model configuration.
+    5. Computes the covariance matrix for the PL data.
+    6. Optionally, computes the maximum likelihood estimate for the model parameters.
+    7. Runs a sampler in parallel to fit the model to the experimental data.
+    The results are saved in the specified save folder.
+
+    """
     model_config, model_config_save = config_utils.load_model_config(
         model_config_id,
         database_folder="fit_experimental_emcee_pl/fit_data_base/",
@@ -20,7 +36,7 @@ def main(model_config_id):
     save_folder = model_config_save["save_folder"]
     Path(save_folder).mkdir(parents=True, exist_ok=True)
     # Load the data
-    Exp_data_pl, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
+    exp_data_pl, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
         csv_name_pl
     )
     # initialising the data generator
@@ -42,11 +58,11 @@ def main(model_config_id):
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
     # getting the maximum likelihood estimate
     logging.info("loading the file successfully")
-    get_maximum_likelihood_estimate = False
+    get_maximum_likelihood_estimate = True
     if get_maximum_likelihood_estimate:
         logging.info("Getting maximum likelihood estimate")
         soln_min = pl_data_gen.get_maximum_likelihood_estimate(
-            Exp_data_pl,
+            exp_data_pl,
             co_var_mat_pl,
             save_folder,
             coeff_spread=0.1,
@@ -60,7 +76,7 @@ def main(model_config_id):
     logging.info("Running sampler")
     fit_pl_utils.run_sampler_parallel(
         save_folder,
-        Exp_data_pl,
+        exp_data_pl,
         co_var_mat_pl,
         pl_data_gen,
         nsteps=model_config_save["nsteps"],

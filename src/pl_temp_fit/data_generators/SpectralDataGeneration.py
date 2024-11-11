@@ -340,7 +340,8 @@ class SpectralDataGeneration:
         print("Maximum log likelihood:", soln.fun)
         # Calculate the Fisher Information Matrix
         # Calculate the confidence intervals
-        confidence_intervals = self.get_confidence_intervals(soln_min)
+        confidence_level = 0.99
+        confidence_intervals = self.get_confidence_intervals(soln_min,confidence_level = confidence_level)
         # print those into a file
         with open(save_folder + "/maximum_likelihood_estimate.txt", "w") as f:
             f.write("Maximum likelihood estimates:\n")
@@ -351,7 +352,7 @@ class SpectralDataGeneration:
                 for key2 in self.params_to_fit_init[key].keys():
                     f.write(f"  {key}_{key2} = {soln_min.x[counter]:.3f}\n")
                     f.write(
-                        f"  Confidence interval: {confidence_intervals[counter]} \n"
+                        f"  Confidence interval confidence_level {confidence_level}: {confidence_intervals[counter]} \n"
                     )
                     counter += 1
                     

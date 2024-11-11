@@ -37,18 +37,13 @@ def save_model_config(
     database_folder="fit_experimental_emcee_el/fit_data_base/",
     data_folder="fit_experimental_emcee_el/fit_data/",
     test_id="",
+    max_abs_pos_exp=0.5,
+    error_in_max_abs_pos=0.1,
+    temperature_lifetimes_exp={},
+    relative_error_lifetime=0.05,
+    
 ):
-    """Save the model configuration and the data used for the fit.
-
-    Args:
-    ----
-        csv_name_pl (str): The path to the csv file containing the PL data.
-        csv_name_el (str): The path to the csv file containing the EL data.
-        Temp_std_err (float): The standard error of the temperature measurement.
-        hws_std_err (float): The standard error of the hws measurement.
-    relative_intensity_std_error_pl (float): The standard error of the PL relative intensity measurement.
-
-    """
+    """Save the model configuration and the data used for the fit."""
     model_config = {
         "Temp_std_err": Temp_std_err,
         "hws_std_err": hws_std_err,
@@ -63,44 +58,38 @@ def save_model_config(
     print(f"size of hw is {hws_pl.shape}")
     print(f"size of temperature_list is {temperature_list_pl.shape}")
     date = datetime.datetime.now().strftime("%Y_%m_%d")
-    if test_id == "":
-        test_id = str(uuid.uuid4())
-    # generate the data
+    test_id = test_id or str(uuid.uuid4())
 
     save_folder = Path(data_folder, csv_name_pl.name.split(".")[0], test_id)
     save_folder.mkdir(parents=True, exist_ok=True)
-    # save _model_config
 
-    # get initial covariance matrix
-    # get covariance matrix for the experimental data
-    model_config_save = model_config.copy()
-    model_config_save["save_folder"] = save_folder.absolute().as_posix()
-    model_config_save["csv_name_pl"] = csv_name_pl.absolute().as_posix()
-    if csv_name_el == "":
-        model_config_save["csv_name_el"] = ""
-    else:
-        model_config_save["csv_name_el"] = csv_name_el.absolute().as_posix()
-    model_config_save["date"] = date
-    model_config_save["test_id"] = test_id
-    model_config_save["fixed_parameters_dict"] = fixed_parameters_dict
-    model_config_save["params_to_fit_init"] = params_to_fit_init
-    model_config_save["min_bounds"] = min_bounds
-    model_config_save["max_bounds"] = max_bounds
-    model_config_save["num_iteration_max_likelihood"] = (
-        num_iteration_max_likelihood
-    )
-    model_config_save["coeff_spread"] = coeff_spread
-    model_config_save["nsteps"] = nsteps
-    model_config_save["num_coords"] = num_coords
+    model_config_save = {
+        **model_config,
+        "save_folder": save_folder.absolute().as_posix(),
+        "csv_name_pl": csv_name_pl.absolute().as_posix(),
+        "csv_name_el": csv_name_el.absolute().as_posix() if csv_name_el else "",
+        "date": date,
+        "test_id": test_id,
+        "fixed_parameters_dict": fixed_parameters_dict,
+        "params_to_fit_init": params_to_fit_init,
+        "min_bounds": min_bounds,
+        "max_bounds": max_bounds,
+        "num_iteration_max_likelihood": num_iteration_max_likelihood,
+        "coeff_spread": coeff_spread,
+        "nsteps": nsteps,
+        "num_coords": num_coords,
+        "max_abs_pos_exp": max_abs_pos_exp,
+        "error_in_max_abs_pos": error_in_max_abs_pos,
+        "temperature_lifetimes_exp": temperature_lifetimes_exp,
+        "relative_error_lifetime": relative_error_lifetime,
+    }
 
-    model_config_save.pop("temperature_list_pl")
-    model_config_save.pop("hws_pl")
-    model_config_save.pop("temperature_list_el")
-    model_config_save.pop("hws_el")
+    for key in ["temperature_list_pl", "hws_pl", "temperature_list_el", "hws_el"]:
+        model_config_save.pop(key)
 
     os.makedirs(database_folder, exist_ok=True)
-    with open(database_folder + f"/{test_id}.json", "w") as f:
-        json.dump(model_config_save, f)
+    with open(Path(database_folder, f"{test_id}.json"), "w") as f:
+        json.dump(model_config_save, f, indent=4)
 
     return model_config, test_id
 
@@ -111,7 +100,7 @@ def updata_model_config(
     model_config_save,
 ):
     with Path(database_folder, f"{test_id}.json").open("w") as f:
-        json.dump(model_config_save, f)
+        json.dump(model_config_save, f, indent=4)
 
     return test_id
 

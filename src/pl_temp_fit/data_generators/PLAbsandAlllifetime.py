@@ -22,8 +22,10 @@ class PLAbsandAlllifetime(SpectralDataGeneration):
 
     def generate_dtypes(self):
         dtypes = [
-            ("log_likelihood", float),
-            ("Chi square", float),
+            ("log_likelihood_spectra", float),
+            ("Chi square_spectra", float),
+            ("log_likelihood_lifetime", float),
+            ("log_likelihood_max_abs_pos", float),
             ("max_abs_pos", float),
         ]
         for temp in self.temperature_list:
@@ -51,7 +53,9 @@ class PLAbsandAlllifetime(SpectralDataGeneration):
                 logging.debug(f"Temperature {temp} found in the data")
                 temperature_lifetimes_exp[temp] = exp_lifetime
         self.temperature_lifetimes_exp = temperature_lifetimes_exp.copy()
-        logging.debug(f"temperature_lifetimes_exp: {temperature_lifetimes_exp}")
+        logging.debug(
+            f"temperature_lifetimes_exp: {temperature_lifetimes_exp}"
+        )
         self.error_in_lifetimes = {
             temp: self.relative_error_lifetime * lifetime
             for temp, lifetime in self.temperature_lifetimes_exp.items()
@@ -75,6 +79,7 @@ class PLAbsandAlllifetime(SpectralDataGeneration):
         ) ** 2 / (2 * self.error_in_max_abs_pos**2)
         log_prob -= max_abs_pos_error
         lifetime_errors = []
+        log_likelihood_lifetime = 0
         for temp, exp_lifetime in self.temperature_lifetimes_exp.items():
             index = np.argwhere(self.temperature_list == temp)[0][0]
             calculated_lifetime = 1 / (
@@ -84,6 +89,7 @@ class PLAbsandAlllifetime(SpectralDataGeneration):
             lifetime_error = (calculated_lifetime - exp_lifetime) ** 2 / (
                 2 * error_in_lifetime**2
             )
+            log_likelihood_lifetime += lifetime_error
             log_prob -= lifetime_error
             lifetime_errors.append(calculated_lifetime)
         if np.isnan(log_like) or np.isinf(log_like) or log_like is None:
@@ -92,12 +98,14 @@ class PLAbsandAlllifetime(SpectralDataGeneration):
             log_prob,  # everything added<--
             log_like[0],  # PL spectra
             chi_squared[0][0],
+            log_likelihood_lifetime,
+            max_abs_pos_error,
             data.D.hw[data.D.alpha[:, -1].argmax()],  # max_abs_pos
         )
 
-        for ii in range(0, len(data.EX.kr)):
+        for ii in range(len(data.EX.kr)):
             return_out += (
-                data.EX.knr[0][ii],  
+                data.EX.knr[0][ii],
                 data.EX.kr[ii],
             )
         return return_out
