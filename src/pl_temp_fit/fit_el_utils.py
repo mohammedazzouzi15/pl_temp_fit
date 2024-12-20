@@ -166,8 +166,8 @@ def run_sampler_single(
         backend,
         nsteps,
         dtype=[
-            ("log_likelihood", float),
-            ("Chi square", float),
+            ("log_likelihood_spectra", float),
+            ("Chi square_spectra", float),
             ("DVNR", float),
             ("CT_knr", float),
             ("CT_kr", float),
@@ -227,8 +227,8 @@ def run_sampler_parallel(
         )
 
     dtype = [
-        ("log_likelihood", float),
-        ("Chi square", float),
+        ("log_likelihood_spectra", float),
+        ("Chi square_spectra", float),
         ("DVNR", float),
         ("CT_knr", float),
         ("CT_kr", float),

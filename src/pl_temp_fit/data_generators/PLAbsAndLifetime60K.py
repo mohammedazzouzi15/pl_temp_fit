@@ -11,8 +11,8 @@ class PLAbsAndLifetime60K(SpectralDataGeneration):
     def __init__(self, temperature_list, hws_list):
         super().__init__(temperature_list, hws_list)
         self.dtypes = [
-            ("log_likelihood", float),
-            ("Chi square", float),
+            ("log_likelihood_spectra", float),
+            ("Chi square_spectra", float),
             ("Ex_kr", float),
             ("Ex_knr", float),
             ("max_abs_pos", float),
