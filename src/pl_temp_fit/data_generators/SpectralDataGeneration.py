@@ -150,7 +150,7 @@ class SpectralDataGeneration:
         diff = exp_data.reshape(-1, 1) - model_data.reshape(-1, 1)
         diff[np.abs(exp_data.reshape(-1, 1)) < self.lowsignallimit] = 0
         log_likelihood = -0.5 * np.dot(diff.T, np.dot(inv_co_var_mat_pl, diff))
-        chi_squared = -2 * log_likelihood / (len(exp_data) - len(theta))
+        chi_squared = -2 * log_likelihood / (len(exp_data.reshape(-1, 1)) - len(theta))
         return log_likelihood, chi_squared, data_model
 
     def log_probability(
