@@ -374,6 +374,8 @@ def plot_fit_to_experimental_data(
     for axis in ax:
         axis.get_legend().remove()
 
+    return fig, ax
+
 
 def plot_fit_to_experimental_data_sameaxis(
     model_config_save,

@@ -2,12 +2,13 @@ from pathlib import Path
 
 
 def save_slurm_script(
-    test_id, script_to_run, model_config_save, config_folder
+    test_id, script_to_run, model_config_save, config_folder,sh_name=None
 ):
     model_config_id = config_folder + "/" + test_id
     csv_name = model_config_save["csv_name_pl"]
     results_name = csv_name.replace(".csv", "").split("/")[-1]
-    sh_name = f"{results_name}_{script_to_run}.sh"
+    if sh_name is None:
+        sh_name = f"{results_name}_{script_to_run}.sh"
     script = """#!/bin/bash
 #SBATCH --job-name=pl_temp_fit
 #SBATCH --output=/home/mazzouzi/pl_temp_fit/slurm_script/output/%A_%a.out
