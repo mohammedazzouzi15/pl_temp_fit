@@ -13,8 +13,8 @@ class PLAbsAndLifetimeEVER(SpectralDataGeneration):
     def __init__(self, temperature_list, hws_list):
         super().__init__(temperature_list, hws_list)
         self.dtypes = [
-            ("log_likelihood", float),
-            ("Chi square", float),
+            ("log_likelihood_spectra", float),
+            ("Chi square_spectra", float),
             ("Ex_kr_300K", float),
             ("Ex_knr_300K", float),
             ("Ex_kr_260K", float),

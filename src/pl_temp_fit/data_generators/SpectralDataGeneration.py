@@ -37,8 +37,8 @@ class SpectralDataGeneration:
         self.lowsignallimit = 0.03
         self.noise_sigma = 0.01
         self.dtypes = [
-            ("log_likelihood", float),
-            ("Chi square", float),
+            ("log_likelihood_spectra", float),
+            ("Chi square_spectra", float),
             ("Ex_kr", float),
             ("Ex_knr", float),
         ]
