@@ -89,7 +89,7 @@ def main(model_config_id):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run the EL sample fitting")
+    parser = argparse.ArgumentParser(description="Run the PL sample fitting")
     parser.add_argument(
         "--model_config_id",
         type=str,

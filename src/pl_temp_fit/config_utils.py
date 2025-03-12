@@ -1,6 +1,5 @@
-"""This module contains functions to save and load the model configuration.
+"""This module contains functions to save and load the model configuration and the data used for the fit.
 
-and the data used for the fit.
 The model configuration is saved in a json file and the data is saved in a csv file.
 The model configuration is used to generate the data and the data is used to fit the model.
 """

@@ -1,9 +1,11 @@
+"""This module contains utility classes and functions for working with the emcee library."""
 
 import numpy as np
 import emcee
 
 class ensemble_sampler(emcee.EnsembleSampler):
-    """ workaround the issues with blobs from the sampler"""
+    """Workaround the issues with blobs from the sampler."""
+
     def compute_log_prob(self, coords):
         """Calculate the vector of log-probability for the walkers
 
@@ -54,7 +56,15 @@ class ensemble_sampler(emcee.EnsembleSampler):
 
 
 class hDFBackend_2(emcee.backends.HDFBackend):
+    """Custom HDFBackend with additional functionalities."""
+
     def grow(self, ngrow, blobs):
+        """Grow the dataset.
+
+        Args:
+            ngrow (int): Number of steps to grow.
+            blobs (list): List of blobs.
+        """
         """Expand the storage space by some number of samples
 
         Args:
@@ -72,6 +82,12 @@ class hDFBackend_2(emcee.backends.HDFBackend):
             g.attrs["has_blobs"] = False
 
     def _check(self, state, accepted):
+        """Check the state and accepted steps.
+
+        Args:
+            state (State): The state of the sampler.
+            accepted (list): List of accepted steps.
+        """
         nwalkers, ndim = self.shape
         if state.coords.shape != (nwalkers, ndim):
             raise ValueError(
@@ -88,6 +104,12 @@ class hDFBackend_2(emcee.backends.HDFBackend):
                 "invalid acceptance size; expected {0}".format(nwalkers)
             )
     def save_step(self, state, accepted):
+        """Save a step in the HDF5 file.
+
+        Args:
+            state (State): The state of the sampler.
+            accepted (list): List of accepted steps.
+        """
         """Save a step to the backend
 
         Args:
@@ -112,4 +134,9 @@ class hDFBackend_2(emcee.backends.HDFBackend):
 
             g.attrs["iteration"] = iteration + 1
     def has_blobs(self):
+        """Check if the backend has blobs.
+
+        Returns:
+            bool: True if the backend has blobs, False otherwise.
+        """
         return False
