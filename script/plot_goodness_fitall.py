@@ -31,7 +31,7 @@ def main(
             add_for_ssh + model_config_save["save_folder"] + "/sampler.h5"
         )
         reader = emcee.backends.HDFBackend(filename, name="multi_core")
-        discard = 5000
+        discard = 500
         chi_score = get_chi_score(
             reader,
             model_config_save,
@@ -203,6 +203,8 @@ def plot_fit_to_experimental_data(
     for axis in ax[:-1]:
         axis.get_legend().remove()
     fig.tight_layout()
+    while Path(f"script/goodness_fit/{name}.png").exists():
+        name = name + "_1"
     fig.savefig(f"script/goodness_fit/{name}.png")
 
     return fig, ax
@@ -340,6 +342,9 @@ if __name__ == "__main__":
     databse_path = Path(
         "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/fit_experimental_emcee_pl/fit_data_base/allLifetimes/"
     )
+    name_folder = "sensitivity"
+    databse_path = Path(f"fit_experimental_emcee_pl/fit_data_base/{name_folder}/")
+
     csv_file = "/media/mohammed/Work/pl_temp_fit/script/all_results.csv"
-    add_for_ssh = "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/" 
+    add_for_ssh = ""#"/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/" 
     main(databse_path, csv_file, add_for_ssh=add_for_ssh)

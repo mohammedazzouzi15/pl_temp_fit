@@ -10,14 +10,14 @@ import pandas as pd
 from pl_temp_fit import config_utils
 
 
-def main():
-    databse_path = Path("fit_experimental_emcee_pl/fit_data_base/allLifetimes")
+def main(name_folder="sensitivity"):
+    databse_path = Path(f"fit_experimental_emcee_pl/fit_data_base/{name_folder}/")
 
-    databse_path = Path(
-        "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/fit_experimental_emcee_pl/fit_data_base/allLifetimes/"
-    )
+    #databse_path = Path(
+    #    "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/fit_experimental_emcee_pl/fit_data_base/allLifetimes/"
+    #)
 
-    add_for_ssh = "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/"  # ""
+    add_for_ssh = ""#"/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/"  # ""
     json_files = list(databse_path.glob("*.json"))
     list_model_config = []
     for _id, json_file in enumerate(json_files):
@@ -65,7 +65,7 @@ def main():
     df_all["csv_name_pl"] = df_all["csv_name_pl"].apply(
         lambda x: x.split("/")[-1]
     )
-    df_all.to_csv("script/all_results.csv", index=False)
+    df_all.to_csv(f"script/all_results{name_folder}.csv", index=False)
 
 
 if __name__ == "__main__":

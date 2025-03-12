@@ -7,7 +7,8 @@ from multiprocess import Pool
 from pl_temp_fit.data_generators.SpectralDataGeneration import (
     SpectralDataGeneration,
 )
-
+import logging
+logger = logging.getLogger(__name__)
 
 def get_initial_coords(
     data_generator: SpectralDataGeneration,
@@ -119,6 +120,9 @@ def run_sampling_in_parallel(
             autocorr, index, old_tau, converged = run_auto_correlation_check(
                 sampler, autocorr, index, old_tau
             )
+            logger.info(f"converged = {converged}")
+            max_log_prob = np.max(sampler.get_log_prob(flat=True))
+            logger.info(f"max_log_prob = {max_log_prob}")
             if converged:
                 break
     end = time.time()

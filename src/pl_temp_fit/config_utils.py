@@ -41,9 +41,40 @@ def save_model_config(
     error_in_max_abs_pos=0.1,
     temperature_lifetimes_exp={},
     relative_error_lifetime=0.05,
-    
 ):
-    """Save the model configuration and the data used for the fit."""
+    """Save the model configuration and the data used for the fit.
+
+    Args:
+        csv_name_pl (str): Name of the PL CSV file.
+        csv_name_el (str): Name of the EL CSV file.
+        Temp_std_err (float): Standard error for temperature.
+        hws_std_err (float): Standard error for hws.
+        relative_intensity_std_error_pl (float): Relative intensity standard error for PL.
+        relative_intensity_std_error_el (float): Relative intensity standard error for EL.
+        temperature_list_pl (list): List of temperatures for PL.
+        hws_pl (list): List of hws for PL.
+        temperature_list_el (list): List of temperatures for EL.
+        hws_el (list): List of hws for EL.
+        noise_sigma (float): Noise sigma value.
+        fixed_parameters_dict (dict): Dictionary of fixed parameters.
+        params_to_fit_init (dict): Initial parameters to fit.
+        min_bounds (dict): Minimum bounds for parameters.
+        max_bounds (dict): Maximum bounds for parameters.
+        num_iteration_max_likelihood (int): Number of iterations for maximum likelihood.
+        coeff_spread (float): Coefficient spread value.
+        nsteps (int): Number of steps.
+        num_coords (int): Number of coordinates.
+        database_folder (str): Folder to save the database.
+        data_folder (str): Folder to save the data.
+        test_id (str): Test identifier.
+        max_abs_pos_exp (float): Maximum absolute position for experiment.
+        error_in_max_abs_pos (float): Error in maximum absolute position.
+        temperature_lifetimes_exp (dict): Dictionary of temperature lifetimes for experiment.
+        relative_error_lifetime (float): Relative error in lifetime.
+
+    Returns:
+        tuple: A tuple containing the model configuration dictionary and the test ID.
+    """
     model_config = {
         "Temp_std_err": Temp_std_err,
         "hws_std_err": hws_std_err,
@@ -99,6 +130,16 @@ def updata_model_config(
     database_folder: Path,
     model_config_save,
 ):
+    """Update the model configuration in the database.
+
+    Args:
+        test_id (str): Test identifier.
+        database_folder (Path): Path to the database folder.
+        model_config_save (dict): Model configuration dictionary to save.
+
+    Returns:
+        str: The test ID.
+    """
     with Path(database_folder, f"{test_id}.json").open("w") as f:
         json.dump(model_config_save, f, indent=4)
 
@@ -109,6 +150,15 @@ def load_model_config(
     test_id,
     database_folder: Path,
 ):
+    """Load the model configuration from the database.
+
+    Args:
+        test_id (str): Test identifier.
+        database_folder (Path): Path to the database folder.
+
+    Returns:
+        tuple: A tuple containing the model configuration dictionary and the saved model configuration dictionary.
+    """
     with Path(database_folder, f"{test_id}.json").open("r") as f:
         model_config_save = json.load(f)
 
@@ -153,6 +203,14 @@ def load_model_config(
 
 
 def get_dict_params(model_config):
+    """Get the dictionary parameters from the model configuration.
+
+    Args:
+        model_config (dict): Model configuration dictionary.
+
+    Returns:
+        tuple: A tuple containing fixed parameters dictionary, parameters to fit, minimum bounds, and maximum bounds.
+    """
     fixed_parameters_dict = model_config["fixed_parameters_dict"]
     params_to_fit = model_config["params_to_fit_init"]
     min_bound = model_config["min_bounds"]
@@ -180,7 +238,6 @@ def update_csv_name_pl(
 
     Returns:
         dict: The updated model configuration dictionary with new 'csv_name_pl' and 'save_folder' fields.
-
     """
     model_config_save["csv_name_pl"] = new_path + "/" + csv_name.split("/")[-1]
     model_config_save["save_folder"] = (
