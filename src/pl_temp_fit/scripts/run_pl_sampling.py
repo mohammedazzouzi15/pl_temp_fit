@@ -1,7 +1,6 @@
-from pl_temp_fit import Exp_data_utils
-import numpy as np
-from pl_temp_fit import config_utils
 from pl_temp_fit import (
+    Exp_data_utils,
+    config_utils,
     covariance_utils,
     fit_pl_utils,
 )
@@ -69,6 +68,7 @@ def main(model_config_id):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Run the EL sample fitting")
     parser.add_argument(
         "--model_config_id",

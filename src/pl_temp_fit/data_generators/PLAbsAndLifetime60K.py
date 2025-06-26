@@ -1,7 +1,7 @@
 """Class to fit the PL data with a model that includes the absorption peak and lifetime parameters."""
 
-from pathlib import Path
 import numpy as np
+
 from pl_temp_fit.data_generators.SpectralDataGeneration import (
     SpectralDataGeneration,
 )
@@ -23,7 +23,7 @@ class PLAbsAndLifetime60K(SpectralDataGeneration):
         self.error_in_lifetime_temp = 1e-10  # in seconds
 
     def log_probability(self, theta, exp_data, inv_co_var_mat_pl):
-        """this is an example of a log probability function for the model."""
+        """This is an example of a log probability function for the model."""
         lp = self.log_prior(theta)
         if lp == -np.inf:
             return (

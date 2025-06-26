@@ -32,7 +32,7 @@ Path(save_folder).mkdir(parents=True, exist_ok=True)
 exp_data_pl, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
     "/media/mohammed/Work/pl_temp_fit/" + csv_name_pl
 )
-temperature_list_pl = [60,150,300]
+temperature_list_pl = [60, 150, 300]
 # initialising the data generator
 pl_data_gen = PLAbsandAlllifetime.PLAbsandAlllifetime(
     temperature_list_pl, hws_pl
@@ -128,10 +128,14 @@ plt.savefig("simulated_data.png")
 class CustomConvNet(tf.keras.Model):
     def __init__(self):
         super().__init__()
-        self.conv1 = tf.keras.layers.Conv1D(128, kernel_size=100, padding='same', activation='tanh')
-        self.conv2 = tf.keras.layers.Conv1D(128, kernel_size=1, padding='same', activation='tanh')
+        self.conv1 = tf.keras.layers.Conv1D(
+            128, kernel_size=100, padding="same", activation="tanh"
+        )
+        self.conv2 = tf.keras.layers.Conv1D(
+            128, kernel_size=1, padding="same", activation="tanh"
+        )
         self.flatten = tf.keras.layers.Flatten()
-        self.dense1 = tf.keras.layers.Dense(128, activation='tanh')
+        self.dense1 = tf.keras.layers.Dense(128, activation="tanh")
         self.dense2 = tf.keras.layers.Dense(9)
 
     def call(self, x, **kwargs):
@@ -141,6 +145,7 @@ class CustomConvNet(tf.keras.Model):
         x = self.dense1(x)
         x = self.dense2(x)
         return x
+
 
 summary_net = CustomConvNet()
 COUPLING_NET_SETTINGS = {
@@ -166,7 +171,7 @@ trainer = Trainer(
     checkpoint_path="checkpoints.ckpt",
 )
 print(amortizer.summary())
-#history = trainer.train_online(epochs=1, iterations_per_epoch=20, batch_size=16)
+# history = trainer.train_online(epochs=1, iterations_per_epoch=20, batch_size=16)
 
 fig = trainer.diagnose_latent2d(plot_args={"height": 1.5})
 fig.savefig("latent_space.png")
@@ -181,5 +186,9 @@ posterior_samples = amortizer.sample(valid_sim_data, n_samples=100)
 fig = diag.plot_sbc_ecdf(posterior_samples, valid_sim_data["parameters"])
 fig.savefig("sbc_ecdf.png")
 
-fig = diag.plot_recovery(posterior_samples, valid_sim_data["parameters"], param_names=prior.param_names)
+fig = diag.plot_recovery(
+    posterior_samples,
+    valid_sim_data["parameters"],
+    param_names=prior.param_names,
+)
 fig.savefig("recovery.png")

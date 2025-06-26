@@ -1,13 +1,12 @@
-from pl_temp_fit import Exp_data_utils
-import numpy as np
-from pl_temp_fit import config_utils
+import logging
+from pathlib import Path
+
 from pl_temp_fit import (
-    covariance_utils,
+    Exp_data_utils,
+    config_utils,
     fit_pl_utils,
 )
 from pl_temp_fit.data_generators import PLAbsAndLifetime60K
-from pathlib import Path
-import logging
 
 
 def main(model_config_id):

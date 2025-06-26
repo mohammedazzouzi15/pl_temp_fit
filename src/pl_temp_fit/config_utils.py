@@ -44,6 +44,7 @@ def save_model_config(
     """Save the model configuration and the data used for the fit.
 
     Args:
+    ----
         csv_name_pl (str): Name of the PL CSV file.
         csv_name_el (str): Name of the EL CSV file.
         Temp_std_err (float): Standard error for temperature.
@@ -72,7 +73,9 @@ def save_model_config(
         relative_error_lifetime (float): Relative error in lifetime.
 
     Returns:
+    -------
         tuple: A tuple containing the model configuration dictionary and the test ID.
+
     """
     model_config = {
         "Temp_std_err": Temp_std_err,
@@ -97,7 +100,9 @@ def save_model_config(
         **model_config,
         "save_folder": save_folder.absolute().as_posix(),
         "csv_name_pl": csv_name_pl.absolute().as_posix(),
-        "csv_name_el": csv_name_el.absolute().as_posix() if csv_name_el else "",
+        "csv_name_el": csv_name_el.absolute().as_posix()
+        if csv_name_el
+        else "",
         "date": date,
         "test_id": test_id,
         "fixed_parameters_dict": fixed_parameters_dict,
@@ -114,7 +119,12 @@ def save_model_config(
         "relative_error_lifetime": relative_error_lifetime,
     }
 
-    for key in ["temperature_list_pl", "hws_pl", "temperature_list_el", "hws_el"]:
+    for key in [
+        "temperature_list_pl",
+        "hws_pl",
+        "temperature_list_el",
+        "hws_el",
+    ]:
         model_config_save.pop(key)
 
     os.makedirs(database_folder, exist_ok=True)
@@ -132,12 +142,15 @@ def updata_model_config(
     """Update the model configuration in the database.
 
     Args:
+    ----
         test_id (str): Test identifier.
         database_folder (Path): Path to the database folder.
         model_config_save (dict): Model configuration dictionary to save.
 
     Returns:
+    -------
         str: The test ID.
+
     """
     with Path(database_folder, f"{test_id}.json").open("w") as f:
         json.dump(model_config_save, f, indent=4)
@@ -152,11 +165,14 @@ def load_model_config(
     """Load the model configuration from the database.
 
     Args:
+    ----
         test_id (str): Test identifier.
         database_folder (Path): Path to the database folder.
 
     Returns:
+    -------
         tuple: A tuple containing the model configuration dictionary and the saved model configuration dictionary.
+
     """
     with Path(database_folder, f"{test_id}.json").open("r") as f:
         model_config_save = json.load(f)
@@ -205,10 +221,13 @@ def get_dict_params(model_config):
     """Get the dictionary parameters from the model configuration.
 
     Args:
+    ----
         model_config (dict): Model configuration dictionary.
 
     Returns:
+    -------
         tuple: A tuple containing fixed parameters dictionary, parameters to fit, minimum bounds, and maximum bounds.
+
     """
     fixed_parameters_dict = model_config["fixed_parameters_dict"]
     params_to_fit = model_config["params_to_fit_init"]
@@ -228,6 +247,7 @@ def update_csv_name_pl(
     """Updates the 'csv_name_pl' and 'save_folder' fields in the model configuration dictionary.
 
     Args:
+    ----
         model_config_save (dict): The model configuration dictionary to be updated.
         csv_name (str): The original CSV file name with its path.
         new_path (str): The new path where the CSV file will be saved.
@@ -236,7 +256,9 @@ def update_csv_name_pl(
         test_id (str): The test identifier.
 
     Returns:
+    -------
         dict: The updated model configuration dictionary with new 'csv_name_pl' and 'save_folder' fields.
+
     """
     model_config_save["csv_name_pl"] = new_path + "/" + csv_name.split("/")[-1]
     model_config_save["save_folder"] = (

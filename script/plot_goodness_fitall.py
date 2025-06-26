@@ -343,8 +343,10 @@ if __name__ == "__main__":
         "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/fit_experimental_emcee_pl/fit_data_base/allLifetimes/"
     )
     name_folder = "sensitivity"
-    databse_path = Path(f"fit_experimental_emcee_pl/fit_data_base/{name_folder}/")
+    databse_path = Path(
+        f"fit_experimental_emcee_pl/fit_data_base/{name_folder}/"
+    )
 
     csv_file = "/media/mohammed/Work/pl_temp_fit/script/all_results.csv"
-    add_for_ssh = ""#"/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/" 
+    add_for_ssh = ""  # "/run/user/1000/gvfs/sftp:host=lcmdlc3.epfl.ch,user=mazzouzi/home/mazzouzi/pl_temp_fit/"
     main(databse_path, csv_file, add_for_ssh=add_for_ssh)

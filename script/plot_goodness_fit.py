@@ -1,15 +1,17 @@
 ### script for plotting data from the sampling outputs
 
+from pathlib import Path
+
+import emcee
 import numpy as np
+from matplotlib import pyplot as plt
+
 from pl_temp_fit import (
     Exp_data_utils,
+    config_utils,
     covariance_utils,
     fit_pl_utils,
-    config_utils,
 )
-import emcee
-from pathlib import Path
-from matplotlib import pyplot as plt
 
 
 def main(databse_path, test_id):
@@ -66,7 +68,6 @@ def plot_fit_to_experimental_data(
     discard: the number of samples to discard
     chains_list: the list of chains to plot
     """
-
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
@@ -97,12 +98,12 @@ def plot_fit_to_experimental_data(
         fixed_parameters_dict,
         numnber_of_samples=20,
     )
-    real_lifetime= model_config_save["temperature_lifetimes_exp"]
+    real_lifetime = model_config_save["temperature_lifetimes_exp"]
     real_max_abs = float(model_config_save["max_abs_pos_exp"])
     print(real_max_abs)
     error_in_max_abs_pos = model_config_save["error_in_max_abs_pos"]
     error_in_lifetimes = model_config_save["relative_error_lifetime"]
-    fig, ax,lifetime, max_abs = plot_exp_data_with_variance(
+    fig, ax, lifetime, max_abs = plot_exp_data_with_variance(
         temperature_list,
         hws,
         variance_pl,
@@ -111,20 +112,53 @@ def plot_fit_to_experimental_data(
         true_parameters,
         Exp_data,
     )
-        # Create new axes for real lifetimes and max absorption
-    #ax[-2].scatter(real_max_abs,1, 'o', label='Real Max Absorption',marker_size=20)
-    ax[0].errorbar(real_max_abs,1, xerr=error_in_max_abs_pos, fmt='o', label='Real Max Absorption', color='red')
+    # Create new axes for real lifetimes and max absorption
+    # ax[-2].scatter(real_max_abs,1, 'o', label='Real Max Absorption',marker_size=20)
+    ax[0].errorbar(
+        real_max_abs,
+        1,
+        xerr=error_in_max_abs_pos,
+        fmt="o",
+        label="Real Max Absorption",
+        color="red",
+    )
     # add text next to the point
-    ax[0].text(real_max_abs, 1+0.05, f'max  \n abs', fontsize=12, verticalalignment='center', horizontalalignment='right')
+    ax[0].text(
+        real_max_abs,
+        1 + 0.05,
+        "max  \n abs",
+        fontsize=12,
+        verticalalignment="center",
+        horizontalalignment="right",
+    )
     ax_real_lifetime = fig.get_axes()[-1]
     temp_lifetime_data = [float(k) for k in real_lifetime.keys()]
-    real_lifetime_values = [float(v)*1e9 for v in real_lifetime.values()]
+    real_lifetime_values = [float(v) * 1e9 for v in real_lifetime.values()]
     # Plot real lifetimes
-    ax_real_lifetime.plot(temp_lifetime_data, real_lifetime_values, 'o-', label='Real Lifetime', color='red')
-    ax_real_lifetime.errorbar(temp_lifetime_data, real_lifetime_values, yerr=[error_in_lifetimes * v for v in real_lifetime_values], fmt='o', color='red')
-    ax_real_lifetime.plot(temperature_list, lifetime*1e9, 'x-', label='Simulated Lifetime',alpha=0.5, color='black')
-    ax_real_lifetime.set_xlabel('Temperature (K)')
-    ax_real_lifetime.set_ylabel('Lifetime (ns)')
+    ax_real_lifetime.plot(
+        temp_lifetime_data,
+        real_lifetime_values,
+        "o-",
+        label="Real Lifetime",
+        color="red",
+    )
+    ax_real_lifetime.errorbar(
+        temp_lifetime_data,
+        real_lifetime_values,
+        yerr=[error_in_lifetimes * v for v in real_lifetime_values],
+        fmt="o",
+        color="red",
+    )
+    ax_real_lifetime.plot(
+        temperature_list,
+        lifetime * 1e9,
+        "x-",
+        label="Simulated Lifetime",
+        alpha=0.5,
+        color="black",
+    )
+    ax_real_lifetime.set_xlabel("Temperature (K)")
+    ax_real_lifetime.set_ylabel("Lifetime (ns)")
     ax_real_lifetime.legend()
     for true_parameters in distribution[
         np.random.choice(len(distribution), 10), :
@@ -144,8 +178,9 @@ def plot_fit_to_experimental_data(
             fig=fig,
             axis=ax,
         )
-        ax_real_lifetime.plot(temperature_list, lifetime, 'x-',alpha=0.5, color='black')
-
+        ax_real_lifetime.plot(
+            temperature_list, lifetime, "x-", alpha=0.5, color="black"
+        )
 
     fig.suptitle(
         model_config_save["csv_name_pl"].split("/")[-1].split("_")[0]
@@ -228,8 +263,8 @@ def plot_exp_data_with_variance(
         fixed_parameters_dict,
         true_parameters,
     )
-    #print("lifetime", lifetime)
-    #print("max_abs", max_abs)
+    # print("lifetime", lifetime)
+    # print("max_abs", max_abs)
 
     truemodel_pl = model_data_pl / np.max(model_data_pl.reshape(-1, 1))
     if fig is None:

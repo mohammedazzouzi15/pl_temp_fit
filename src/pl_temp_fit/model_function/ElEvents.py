@@ -1,7 +1,5 @@
 """EL generation function for the model."""
 
-import numpy as np
-
 
 def el_gen(EX, CT, D):
     """Calculate the EL generation of excitons.
@@ -26,5 +24,5 @@ def el_gen(EX, CT, D):
         CT.Gen = "state is off"
     else:
         EX.Gen = 0
-        CT.Gen = 1e25 
+        CT.Gen = 1e25
     return EX, CT

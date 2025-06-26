@@ -56,7 +56,9 @@ class PLAbsAndLifetimeEVER(SpectralDataGeneration):
     def check_available_lifetime(self):
         temperature_lifetimes_exp = {}
         # change the keys of the dictionary to integers
-        self.temperature_lifetimes_exp = {int(k): v for k, v in self.temperature_lifetimes_exp.items()}
+        self.temperature_lifetimes_exp = {
+            int(k): v for k, v in self.temperature_lifetimes_exp.items()
+        }
         for temp, exp_lifetime in self.temperature_lifetimes_exp.items():
             index = np.argwhere(self.temperature_list == temp)
             if index is None:
@@ -66,7 +68,6 @@ class PLAbsAndLifetimeEVER(SpectralDataGeneration):
                 logging.debug(f"Temperature {temp} found in the data")
                 temperature_lifetimes_exp[temp] = exp_lifetime
         self.temperature_lifetimes_exp = temperature_lifetimes_exp
-        return None
 
     def log_probability(self, theta, exp_data, inv_co_var_mat_pl):
         """This is an example of a log probability function for the model."""

@@ -1,14 +1,17 @@
+import logging
+import time
 from pathlib import Path
 
 import emcee
 import numpy as np
-import time
 from multiprocess import Pool
+
 from pl_temp_fit.data_generators.SpectralDataGeneration import (
     SpectralDataGeneration,
 )
-import logging
+
 logger = logging.getLogger(__name__)
+
 
 def get_initial_coords(
     data_generator: SpectralDataGeneration,

@@ -1,13 +1,14 @@
 import unittest
 from pathlib import Path
 
+import emcee
+
 from pl_temp_fit import (
     Exp_data_utils,
     config_utils,
     fit_pl_utils,
 )
 from pl_temp_fit.data_generators import PLAbsAndLifetimeEVER
-import emcee
 
 
 class TestPLSampler(unittest.TestCase):

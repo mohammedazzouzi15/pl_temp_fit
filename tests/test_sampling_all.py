@@ -1,5 +1,9 @@
+import logging
 import unittest
 from pathlib import Path
+
+import emcee
+import numpy as np
 
 from pl_temp_fit import (
     Exp_data_utils,
@@ -7,9 +11,6 @@ from pl_temp_fit import (
     fit_pl_utils,
 )
 from pl_temp_fit.data_generators import PLAbsandAlllifetime
-import emcee
-import logging
-import numpy as np
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -46,7 +47,6 @@ class TestPLSampler(unittest.TestCase):
             "temperature_lifetimes_exp"
         ]
         self.pl_data_gen.update_with_model_config(self.model_config_save)
-
 
     def test_load_model_config(self):
         logging.debug("model_config: ", self.model_config)

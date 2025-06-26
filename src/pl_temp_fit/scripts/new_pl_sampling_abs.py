@@ -1,13 +1,13 @@
-from pl_temp_fit import Exp_data_utils
-import numpy as np
-from pl_temp_fit import config_utils
+import logging
+from pathlib import Path
+
 from pl_temp_fit import (
-    covariance_utils,
+    Exp_data_utils,
+    config_utils,
     fit_pl_utils,
 )
 from pl_temp_fit.data_generators import PLAbs
-import logging
-from pathlib import Path
+
 
 def main(model_config_id):
     model_config, model_config_save = config_utils.load_model_config(
@@ -64,6 +64,7 @@ def main(model_config_id):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Run the PL sample fitting")
     parser.add_argument(
         "--model_config_id",

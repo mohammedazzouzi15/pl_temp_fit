@@ -150,7 +150,9 @@ class SpectralDataGeneration:
         diff = exp_data.reshape(-1, 1) - model_data.reshape(-1, 1)
         diff[np.abs(exp_data.reshape(-1, 1)) < self.lowsignallimit] = 0
         log_likelihood = -0.5 * np.dot(diff.T, np.dot(inv_co_var_mat_pl, diff))
-        chi_squared = -2 * log_likelihood / (len(exp_data.reshape(-1, 1)) - len(theta))
+        chi_squared = (
+            -2 * log_likelihood / (len(exp_data.reshape(-1, 1)) - len(theta))
+        )
         return log_likelihood, chi_squared, data_model
 
     def log_probability(
@@ -341,7 +343,9 @@ class SpectralDataGeneration:
         # Calculate the Fisher Information Matrix
         # Calculate the confidence intervals
         confidence_level = 0.99
-        confidence_intervals = self.get_confidence_intervals(soln_min,confidence_level = confidence_level)
+        confidence_intervals = self.get_confidence_intervals(
+            soln_min, confidence_level=confidence_level
+        )
         # print those into a file
         with open(save_folder + "/maximum_likelihood_estimate.txt", "w") as f:
             f.write("Maximum likelihood estimates:\n")
@@ -355,7 +359,6 @@ class SpectralDataGeneration:
                         f"  Confidence interval confidence_level {confidence_level}: {confidence_intervals[counter]} \n"
                     )
                     counter += 1
-                    
 
             f.write(f"Maximum log likelihood: {soln_min.fun}\n")
         return soln_min

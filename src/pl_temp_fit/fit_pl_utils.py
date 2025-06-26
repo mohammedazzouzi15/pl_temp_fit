@@ -1,13 +1,13 @@
-from pl_temp_fit.Emcee_utils import ensemble_sampler, hDFBackend_2
-import time
-from scipy.optimize import minimize
-from pl_temp_fit import generate_data_utils, Exp_data_utils
 import numpy as np
-from multiprocess import Pool
-import os
-from pl_temp_fit import covariance_utils, config_utils, FitUtils
-from pl_temp_fit.data_generators.SpectralDataGeneration import SpectralDataGeneration   
-import emcee
+from scipy.optimize import minimize
+
+from pl_temp_fit import (
+    Exp_data_utils,
+    FitUtils,
+    config_utils,
+    covariance_utils,
+    generate_data_utils,
+)
 
 
 def get_maximum_likelihood_estimate(
@@ -263,8 +263,8 @@ def plot_exp_data_with_variance(
         axes.set_ylim(0, 1.1)
     fig.suptitle("PL")
     fig.tight_layout(h_pad=0.0)
-    #save the figure
-    
+    # save the figure
+
     return fig, axis
 
 

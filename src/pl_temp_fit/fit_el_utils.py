@@ -1,19 +1,13 @@
-import time
-from pathlib import Path
-
-import emcee
 import numpy as np
-from multiprocess import Pool
 from scipy.optimize import minimize
 
 from pl_temp_fit import (
     Exp_data_utils,
+    FitUtils,
     config_utils,
     covariance_utils,
     generate_data_utils,
-    FitUtils,
 )
-from pl_temp_fit.Emcee_utils import ensemble_sampler
 
 
 def get_maximum_likelihood_estimate(
@@ -259,13 +253,15 @@ def plot_exp_data_with_variance(
     Exp_data_pl,
     Exp_data_el,
 ):
-    model_data_el, model_data_pl, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr = generate_data_utils.el_trial(
-        temperature_list_el,
-        hws_el,
-        temperature_list_pl,
-        hws_pl,
-        fixed_parameters_dict,
-        true_parameters,
+    model_data_el, model_data_pl, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr = (
+        generate_data_utils.el_trial(
+            temperature_list_el,
+            hws_el,
+            temperature_list_pl,
+            hws_pl,
+            fixed_parameters_dict,
+            true_parameters,
+        )
     )
     truemodel_pl = model_data_pl / np.max(model_data_pl.reshape(-1, 1))
     truemodel_el = model_data_el / np.max(model_data_el.reshape(-1, 1))

@@ -40,5 +40,6 @@ def get_all_json_files(path_database):
         json_files.append(file.name.split(".")[0])
     return json_files
 
+
 if __name__ == "__main__":
     main()

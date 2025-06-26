@@ -64,3 +64,4 @@ slurm_script/output/*
 *.h5
 fit_experimental_emcee_pl
 *.json
+copilot_prompts.txt

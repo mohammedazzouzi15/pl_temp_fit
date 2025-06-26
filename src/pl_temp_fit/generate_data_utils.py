@@ -388,8 +388,8 @@ def el_loglike(
     data_pl = data_pl / np.max(data_pl.reshape(-1, 1))
     data_pl = data_pl.reshape(-1, 1)
     # check that the data in model_data does not contain NaNs or infs
-    #if np.isnan(model_data_el).any() or np.isinf(model_data_el).any():
-        #return [[-np.inf]], [[10]], [[10]], None, None, None, None
+    # if np.isnan(model_data_el).any() or np.isinf(model_data_el).any():
+    # return [[-np.inf]], [[10]], [[10]], None, None, None, None
     diff_el = data_el - model_data_el
     diff_el[np.abs(diff_el) < 1e-3] = 0
     diff_el[np.abs(data_el) < 3e-2] = 0
@@ -434,6 +434,7 @@ def log_probability(
     Returns:
     -------
     float: The log probability for the EL and PL spectra
+
     """
     lp = log_prior(theta, min_bounds, max_bounds)
     if lp == -np.inf:

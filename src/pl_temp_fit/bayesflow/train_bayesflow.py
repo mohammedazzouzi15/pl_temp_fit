@@ -124,13 +124,18 @@ for i, data in enumerate(sim_data):
 plt.tight_layout()
 plt.savefig("simulated_data.png")
 
+
 class CustomConvNet(tf.keras.Model):
-    def __init__(self,summary_output_size=32,hiddens=[128,128]):
+    def __init__(self, summary_output_size=32, hiddens=[128, 128]):
         super().__init__()
-        self.conv1 = tf.keras.layers.Conv1D(hiddens[0], kernel_size=100, padding='same', activation='tanh')
-        self.conv2 = tf.keras.layers.Conv1D(hiddens[0], kernel_size=1, padding='same', activation='tanh')
+        self.conv1 = tf.keras.layers.Conv1D(
+            hiddens[0], kernel_size=100, padding="same", activation="tanh"
+        )
+        self.conv2 = tf.keras.layers.Conv1D(
+            hiddens[0], kernel_size=1, padding="same", activation="tanh"
+        )
         self.flatten = tf.keras.layers.Flatten()
-        self.dense1 = tf.keras.layers.Dense(hiddens[1], activation='tanh')
+        self.dense1 = tf.keras.layers.Dense(hiddens[1], activation="tanh")
         self.dense2 = tf.keras.layers.Dense(summary_output_size)
 
     def call(self, x, **kwargs):
@@ -140,6 +145,7 @@ class CustomConvNet(tf.keras.Model):
         x = self.dense1(x)
         x = self.dense2(x)
         return x
+
 
 summary_net = CustomConvNet()
 COUPLING_NET_SETTINGS = {

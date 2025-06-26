@@ -21,7 +21,6 @@ class PLAbsAndLifetime(SpectralDataGeneration):
         self.error_in_max_abs_pos = 0.01  # in eV
         self.lifetime_exp_temp = 1e-9  # in seconds
         self.error_in_lifetime_temp = 1e-10  # in seconds
-        
 
     def log_probability(self, theta, exp_data, inv_co_var_mat_pl):
         """This is an example of a log probability function for the model."""

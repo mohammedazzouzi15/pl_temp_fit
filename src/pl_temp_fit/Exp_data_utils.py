@@ -1,8 +1,9 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import interpolate
-from pathlib import Path
 
 
 def read_data(csv_file):

@@ -1,7 +1,8 @@
 """This module contains utility classes and functions for working with the emcee library."""
 
-import numpy as np
 import emcee
+import numpy as np
+
 
 class ensemble_sampler(emcee.EnsembleSampler):
     """Workaround the issues with blobs from the sampler."""
@@ -10,6 +11,7 @@ class ensemble_sampler(emcee.EnsembleSampler):
         """Calculate the vector of log-probability for the walkers
 
         Args:
+        ----
             coords: (ndarray[..., ndim]) The position vector in parameter
                 space where the probability should be calculated.
 
@@ -30,8 +32,8 @@ class ensemble_sampler(emcee.EnsembleSampler):
             raise ValueError("At least one parameter value was NaN")
 
         # If the parmaeters are named, then switch to dictionaries
-        #if self.params_are_named:
-         #   p = ndarray_to_list_of_dicts(p, self.parameter_names)
+        # if self.params_are_named:
+        #   p = ndarray_to_list_of_dicts(p, self.parameter_names)
 
         # Run the log-probability calculations (optionally in parallel).
         if self.vectorize:
@@ -62,8 +64,10 @@ class hDFBackend_2(emcee.backends.HDFBackend):
         """Grow the dataset.
 
         Args:
+        ----
             ngrow (int): Number of steps to grow.
             blobs (list): List of blobs.
+
         """
         """Expand the storage space by some number of samples
 
@@ -85,30 +89,31 @@ class hDFBackend_2(emcee.backends.HDFBackend):
         """Check the state and accepted steps.
 
         Args:
+        ----
             state (State): The state of the sampler.
             accepted (list): List of accepted steps.
+
         """
         nwalkers, ndim = self.shape
         if state.coords.shape != (nwalkers, ndim):
             raise ValueError(
-                "invalid coordinate dimensions; expected {0}".format(
-                    (nwalkers, ndim)
-                )
+                f"invalid coordinate dimensions; expected {(nwalkers, ndim)}"
             )
         if state.log_prob.shape != (nwalkers,):
             raise ValueError(
-                "invalid log probability size; expected {0}".format(nwalkers)
+                f"invalid log probability size; expected {nwalkers}"
             )
         if accepted.shape != (nwalkers,):
-            raise ValueError(
-                "invalid acceptance size; expected {0}".format(nwalkers)
-            )
+            raise ValueError(f"invalid acceptance size; expected {nwalkers}")
+
     def save_step(self, state, accepted):
         """Save a step in the HDF5 file.
 
         Args:
+        ----
             state (State): The state of the sampler.
             accepted (list): List of accepted steps.
+
         """
         """Save a step to the backend
 
@@ -126,17 +131,20 @@ class hDFBackend_2(emcee.backends.HDFBackend):
             g["log_prob"][iteration, :] = state.log_prob
             if state.blobs is not None and state.blobs.size > 0:
                 g["blobs"][iteration, :] = state.blobs
- 
+
             g["accepted"][:] += accepted
 
             for i, v in enumerate(state.random_state):
-                g.attrs["random_state_{0}".format(i)] = v
+                g.attrs[f"random_state_{i}"] = v
 
             g.attrs["iteration"] = iteration + 1
+
     def has_blobs(self):
         """Check if the backend has blobs.
 
-        Returns:
+        Returns
+        -------
             bool: True if the backend has blobs, False otherwise.
+
         """
         return False
