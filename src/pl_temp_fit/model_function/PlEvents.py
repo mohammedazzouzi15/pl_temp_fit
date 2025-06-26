@@ -6,22 +6,33 @@ def Gen(EX, CT, I0, D):
     if CT.off == 1:
         Gen_EX = np.zeros(len(D.T))
         EX.Gen = np.zeros(len(D.T))
-        
-        Gen_EX = 1 
+
+        Gen_EX = 1
         EX.Gen = 1e25 * Gen_EX / Gen_EX
         CT.Gen = "state is off"
-
 
     else:
         Gen_EX = np.zeros(len(D.T))
         Gen_CT = np.zeros(len(D.T))
         EX.Gen = np.zeros(len(D.T))
         CT.Gen = np.zeros(len(D.T))
-        
-        Gen_EX = trapezoid(EX.ka_hw * np.exp(-((D.hw.reshape(-1,1) - I0.Laser_hw) ** 2) / I0.Laser_B**2), axis=0)
-        Gen_CT = trapezoid(CT.ka_hw * np.exp(-((D.hw.reshape(-1,1) - I0.Laser_hw) ** 2) / I0.Laser_B**2), axis=0)
-        EX.Gen = 1e25 * Gen_EX / (Gen_EX+Gen_CT)
-        CT.Gen = 1e25 * Gen_CT / (Gen_EX+Gen_CT)
+
+        Gen_EX = trapezoid(
+            EX.ka_hw
+            * np.exp(
+                -((D.hw.reshape(-1, 1) - I0.Laser_hw) ** 2) / I0.Laser_B**2
+            ),
+            axis=0,
+        )
+        Gen_CT = trapezoid(
+            CT.ka_hw
+            * np.exp(
+                -((D.hw.reshape(-1, 1) - I0.Laser_hw) ** 2) / I0.Laser_B**2
+            ),
+            axis=0,
+        )
+        EX.Gen = 1e25 * Gen_EX / (Gen_EX + Gen_CT)
+        CT.Gen = 1e25 * Gen_CT / (Gen_EX + Gen_CT)
 
     return EX, CT
 
@@ -58,11 +69,21 @@ def SUM(EX, CT, C, D):
         krecCT = CT.knr + CT.kr
         ni = np.sqrt(D.DoS**2) * np.exp(-CT.E / (2 * C.kb * D.T))
         CT0 = ni * ni
-        EX0 = CT0 * np.exp(-(EX.E-CT.E)/C.kb*D.T) / D.RCTE
+        EX0 = CT0 * np.exp(-(EX.E - CT.E) / C.kb * D.T) / D.RCTE
         EX.Sum = (
-            EXgen + CTgen + krecEX * EX0 + krecCT * CT0 + krecCT / kCTEX * EXgen + krecCT * krecEX / kCTEX * EX0
+            EXgen
+            + CTgen
+            + krecEX * EX0
+            + krecCT * CT0
+            + krecCT / kCTEX * EXgen
+            + krecCT * krecEX / kCTEX * EX0
         ) / (krecEX + krecCT * kEXCT / kCTEX + krecCT * krecEX / kCTEX)
         CT.Sum = (
-            CTgen + EXgen + krecCT * CT0 + krecEX * EX0 + krecEX / kEXCT * CTgen + krecEX * krecCT / kEXCT * CT0
+            CTgen
+            + EXgen
+            + krecCT * CT0
+            + krecEX * EX0
+            + krecEX / kEXCT * CTgen
+            + krecEX * krecCT / kEXCT * CT0
         ) / (krecCT + krecEX * kCTEX / kEXCT + krecEX * krecCT / kEXCT)
     return EX, CT

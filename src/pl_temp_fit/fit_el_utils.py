@@ -1,19 +1,13 @@
-import time
-from pathlib import Path
-
-import emcee
 import numpy as np
-from multiprocess import Pool
 from scipy.optimize import minimize
 
 from pl_temp_fit import (
     Exp_data_utils,
+    FitUtils,
     config_utils,
     covariance_utils,
     generate_data_utils,
-    FitUtils
 )
-from pl_temp_fit.Emcee_utils import ensemble_sampler
 
 
 def get_maximum_likelihood_estimate(
@@ -30,7 +24,15 @@ def get_maximum_likelihood_estimate(
     min_bound={},
     max_bound={},
 ):
-    nll = lambda *args: -generate_data_utils.el_loglike(*args)
+    def nll(*args):
+        nll = -generate_data_utils.el_loglike(*args)[0]
+        # check type of nll
+        if isinstance(nll, np.ndarray):
+            return nll[0][0]
+        if isinstance(nll, list):
+            return nll[0][0]
+        return nll
+
     init_params, min_bound_list, max_bound_list = [], [], []
     counter = 0
     for key in ["EX", "CT", "D"]:
@@ -137,6 +139,7 @@ def run_sampler_single(
     # Here are the important lines
     inv_cov_el = np.linalg.inv(co_var_mat_el)
     inv_cov_pl = np.linalg.inv(co_var_mat_pl)
+
     def log_probability_glob(theta):
         return generate_data_utils.log_probability(
             theta,
@@ -155,13 +158,17 @@ def run_sampler_single(
         log_probability_glob,
         coords,
         backend,
-        nsteps, 
+        nsteps,
+        dtype=[
+            ("log_likelihood_spectra", float),
+            ("Chi square_spectra", float),
+            ("DVNR", float),
+            ("CT_knr", float),
+            ("CT_kr", float),
+            ("EX_knr", float),
+            ("EX_kr", float),
+        ],
     )
-
-
-
-
-
 
 
 def run_sampler_parallel(
@@ -195,9 +202,10 @@ def run_sampler_parallel(
     inv_cov_el = np.linalg.inv(co_var_mat_el)
     inv_cov_pl = np.linalg.inv(co_var_mat_pl)
     # Here are the important lines
-    
+
     if num_processes is None:
         num_processes = FitUtils.get_number_of_cores()
+
     def log_probability_glob(theta):
         return generate_data_utils.log_probability(
             theta,
@@ -213,9 +221,15 @@ def run_sampler_parallel(
         )
 
     dtype = [
-        ("log_likelihood", float),
+        ("log_likelihood_spectra", float),
+        ("Chi square_spectra", float),
+        ("DVNR", float),
+        ("CT_knr", float),
+        ("CT_kr", float),
+        ("EX_knr", float),
+        ("EX_kr", float),
     ]
-    
+
     return FitUtils.run_sampling_in_parallel(
         log_probability_glob,
         coords,
@@ -224,7 +238,6 @@ def run_sampler_parallel(
         num_processes,
         nsteps,
     )
-
 
 
 def plot_exp_data_with_variance(
@@ -240,13 +253,15 @@ def plot_exp_data_with_variance(
     Exp_data_pl,
     Exp_data_el,
 ):
-    model_data_el, model_data_pl = generate_data_utils.el_trial(
-        temperature_list_el,
-        hws_el,
-        temperature_list_pl,
-        hws_pl,
-        fixed_parameters_dict,
-        true_parameters,
+    model_data_el, model_data_pl, dv_nr, CT_knr, CT_kr, EX_knr, EX_kr = (
+        generate_data_utils.el_trial(
+            temperature_list_el,
+            hws_el,
+            temperature_list_pl,
+            hws_pl,
+            fixed_parameters_dict,
+            true_parameters,
+        )
     )
     truemodel_pl = model_data_pl / np.max(model_data_pl.reshape(-1, 1))
     truemodel_el = model_data_el / np.max(model_data_el.reshape(-1, 1))

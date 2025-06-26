@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from pl_temp_fit import fit_pl_utils
-from pl_temp_fit import covariance_utils
-from pl_temp_fit import Exp_data_utils
+
+from pl_temp_fit import Exp_data_utils, covariance_utils, fit_pl_utils
 
 
 def plot_fit_statistics(
@@ -14,54 +13,51 @@ def plot_fit_statistics(
     range_chi_square=(0, 3),
     range_log_prior=(-1000, 0),
     discard=5,
-    filter_log_likelihood=False,
+    filter_log_likelihood="",
 ):
-    """plot the fit statistics from the sampling output
+    """Plot the fit statistics from the sampling output
     reader: the reader object from the emcee sampler
     range_chi_square: the range for the chi square plot
     range_log_prior: the range for the log prior plot
     discard: the number of samples to discard
     filter_log_likelihood: whether to filter the log likelihood
     """
-
     print("number of iterations", reader.iteration)
     blobs = reader.get_blobs(flat=True, discard=discard)
-    if filter_log_likelihood:
-        print(max(blobs["log_likelihood"]))
-        blobs = blobs[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
-        ]
-        
+    distribution = reader.get_chain(discard=discard, flat=True)
+    print(max(blobs["log_likelihood_spectra"]))
+    distribution = eval(f" distribution[{filter_log_likelihood}]")
+
     fig, ax = plt.subplots(1, 3, figsize=(10, 3))
     ax[0].hist(
-        blobs["Chi square"],
+        blobs["Chi square_spectra"],
         30,
         color="C" + str(0),
         linewidth=2,
         histtype="step",
         range=range_chi_square,
     )
-    ax[0].set_xlabel("Chi square")
+    ax[0].set_xlabel("Chi square_spectra")
     ax[0].set_ylabel("Number of samples")
     ax[0].set_title("Chi square distribution")
     ax[1].hist(
-        blobs["log_likelihood"],
+        blobs["log_likelihood_spectra"],
         30,
         color="C" + str(1),
         linewidth=2,
         histtype="step",
         range=range_log_prior,
     )
-    ax[1].set_xlabel("log likelihood")
+    ax[1].set_xlabel("log likelihood spectra")
     ax[1].set_ylabel("Number of samples")
     ax[1].set_title("log likelihood distribution")
     ax[2].plot(
-        blobs["log_likelihood"],
+        blobs["log_likelihood_spectra"],
         color="C" + str(2),
         linewidth=2,
     )
     ax[2].set_xlabel("Iteration")
-    ax[2].set_ylabel("log likelihood")
+    ax[2].set_ylabel("log likelihood spectra")
     fig.tight_layout()
     for i in range(3):
         ax[i].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
@@ -76,62 +72,62 @@ def plot_fit_statistics_multi(
     filter_log_likelihood=False,
     fig=None,
     ax=None,
-    color='C0',
-    legend_label='test'
-
+    color="C0",
+    legend_label="test",
 ):
-    """plot the fit statistics from the sampling output
+    """Plot the fit statistics from the sampling output
     reader: the reader object from the emcee sampler
     range_chi_square: the range for the chi square plot
     range_log_prior: the range for the log prior plot
     discard: the number of samples to discard
     filter_log_likelihood: whether to filter the log likelihood
     """
-
     print("number of iterations", reader.iteration)
     blobs = reader.get_blobs(flat=True, discard=discard)
     if filter_log_likelihood:
-        print(max(blobs["log_likelihood"]))
+        print(max(blobs["log_likelihood_spectra"]))
         blobs = blobs[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
+            blobs["log_likelihood_spectra"]
+            > max(blobs["log_likelihood_spectra"]) * 3
         ]
     if fig is None:
         fig, ax = plt.subplots(1, 3, figsize=(10, 3))
     ax[0].hist(
-        blobs["Chi square"],
+        blobs["Chi square_spectra"],
         30,
         color=color,
         linewidth=2,
         histtype="step",
         range=range_chi_square,
-        label=legend_label
+        label=legend_label,
     )
-    ax[0].set_xlabel("Chi square")
+    ax[0].set_xlabel("Chi square_spectra")
     ax[0].set_ylabel("Number of samples")
     ax[0].set_title("Chi square distribution")
     ax[0].legend()
     ax[1].hist(
-        blobs["log_likelihood"],
+        blobs["log_likelihood_spectra"],
         30,
         color=color,
         linewidth=2,
         histtype="step",
         range=range_log_prior,
     )
-    ax[1].set_xlabel("log likelihood")
+    ax[1].set_xlabel("log likelihood spectra")
     ax[1].set_ylabel("Number of samples")
     ax[1].set_title("log likelihood distribution")
     ax[2].plot(
-        blobs["log_likelihood"],
+        blobs["log_likelihood_spectra"],
         color=color,
         linewidth=2,
     )
     ax[2].set_xlabel("Iteration")
-    ax[2].set_ylabel("log likelihood")
+    ax[2].set_ylabel("log likelihood spectra")
     fig.tight_layout()
     for i in range(3):
         ax[i].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     return fig, ax
+
 
 def plot_lifetime(
     reader,
@@ -141,7 +137,7 @@ def plot_lifetime(
     temperature=300,
     filter_log_likelihood=False,
 ):
-    """plot the lifetime distribution from the sampling output
+    """Plot the lifetime distribution from the sampling output
     reader: the reader object from the emcee sampler
     range_chi_square: the range for the chi square plot
     range_log_prior: the range for the log prior plot
@@ -152,7 +148,8 @@ def plot_lifetime(
     blobs = reader.get_blobs(flat=True, discard=discard)
     if filter_log_likelihood:
         blobs = blobs[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
+            blobs["log_likelihood_spectra"]
+            > max(blobs["log_likelihood_spectra"]) * 3
         ]
     fig, ax = plt.subplots(2, 2, figsize=(7, 5))
 
@@ -203,10 +200,11 @@ def plot_lifetime(
         ax[i].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     fig.tight_layout()
     plt.show()
+    return fig, ax
 
 
 def plot_chains(reader, model_config_save, discard=50):
-    """plot the chains from the sampling output
+    """Plot the chains from the sampling output
     reader: the reader object from the emcee sampler
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
@@ -220,10 +218,25 @@ def plot_chains(reader, model_config_save, discard=50):
                 for x in model_config_save["params_to_fit_init"][key].keys()
             ]
         )
+    params_to_fit = model_config_save["params_to_fit_init"]
+    labels = []
+    min_bound = {}
+    max_bound = {}
+    for key in params_to_fit.keys():
+        for keys in params_to_fit[key].keys():
+            labels.append(f"{key}_{keys}")
+            min_bound[f"{key}_{keys}"] = model_config_save["min_bounds"][key][
+                keys
+            ]
+            max_bound[f"{key}_{keys}"] = model_config_save["max_bounds"][key][
+                keys
+            ]
+
     labels = label_list
-    fig, axes = plt.subplots(5, figsize=(10, 7), sharex=True)
     samples = reader.get_chain(discard=discard)
-    # labels = ["E", "sigma_E", "LI", "L0", "H0"]
+    fig, axes = plt.subplots(
+        samples.shape[-1], figsize=(10, 1.5 * samples.shape[-1]), sharex=True
+    )
     ndim = len(labels)
     for i in range(ndim):
         ax = axes[i]
@@ -231,21 +244,28 @@ def plot_chains(reader, model_config_save, discard=50):
         ax.set_xlim(0, len(samples))
         ax.set_ylabel(labels[i])
         ax.yaxis.set_label_coords(-0.1, 0.5)
+        if (
+            min_bound[labels[i]] is not None
+            and max_bound[labels[i]] is not None
+        ):
+            ax.set_ylim(min_bound[labels[i]], max_bound[labels[i]])
+
     axes[-1].set_xlabel("step number")
     fig.suptitle(f"Sampler chain for {csv_name.split('/')[-1]}")
+    fig.tight_layout()
     fig.show()
+    return fig, axes
 
 
 def plot_diff_chains(
     reader, model_config_save, discard=50, chains_list=[0, 1, 2, 3, 4]
 ):
-    """plot the chains from the sampling output
+    """Plot the chains from the sampling output
     reader: the reader object from the emcee sampler
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     chains_list: the list of chains to plot
     """
-
     csv_name = model_config_save["csv_name_pl"]
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
@@ -256,14 +276,16 @@ def plot_diff_chains(
             ]
         )
     labels = label_list
-    fig, axes = plt.subplots(5, figsize=(10, 7), sharex=True)
     samples = reader.get_chain(discard=discard)
+    fig, axes = plt.subplots(
+        samples.shape[-1], figsize=(10, 1.5 * samples.shape[-1]), sharex=True
+    )
+
     # labels = ["E", "sigma_E", "LI", "L0", "H0"]
     ndim = len(labels)
     for i in range(ndim):
         ax = axes[i]
         for j in chains_list:
-
             ax.plot(
                 samples[:, j, i],
                 alpha=0.3,
@@ -286,9 +308,9 @@ def plot_fit_to_experimental_data(
     reader,
     discard=10,
     chains_list=None,
-    filter_log_likelihood=False,
+    filter_log_likelihood="",
 ):
-    """plot the fit to the experimental data
+    """Plot the fit to the experimental data
     model_config_save: the model config save dictionary
     model_config: the model config dictionary
     reader: the reader object from the emcee sampler
@@ -300,7 +322,7 @@ def plot_fit_to_experimental_data(
     relative_intensity_std_error_pl = model_config_save[
         "relative_intensity_std_error_pl"
     ]
-    sigma = model_config_save["sigma"]
+    noise_sigma = model_config_save["noise_sigma"]
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
@@ -315,11 +337,8 @@ def plot_fit_to_experimental_data(
         )
     else:
         distribution = distribution.reshape(-1, distribution.shape[-1])
-        if filter_log_likelihood:
-            blobs = reader.get_blobs(flat=True, discard=discard)
-            distribution = distribution[
-                blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
-            ]
+        blobs = reader.get_blobs(flat=True, discard=discard)
+        distribution = eval(f"distribution[{filter_log_likelihood}]")
     true_parameters = fit_pl_utils.get_param_dict(
         params_to_fit_init, distribution[-1]
     )  # model_config_save['params_to_fit_init']#
@@ -342,7 +361,6 @@ def plot_fit_to_experimental_data(
     for true_parameters in distribution[
         np.random.choice(len(distribution), 10), :
     ]:
-
         true_parameters = fit_pl_utils.get_param_dict(
             params_to_fit_init, true_parameters
         )
@@ -363,6 +381,8 @@ def plot_fit_to_experimental_data(
     for axis in ax:
         axis.get_legend().remove()
 
+    return fig, ax
+
 
 def plot_fit_to_experimental_data_sameaxis(
     model_config_save,
@@ -370,9 +390,9 @@ def plot_fit_to_experimental_data_sameaxis(
     reader,
     discard=10,
     chains_list=None,
-    filter_log_likelihood=False,
+    filter_log_likelihood=None,
 ):
-    """plot the fit to the experimental data
+    """Plot the fit to the experimental data
     model_config_save: the model config save dictionary
     model_config: the model config dictionary
     reader: the reader object from the emcee sampler
@@ -384,7 +404,7 @@ def plot_fit_to_experimental_data_sameaxis(
     relative_intensity_std_error_pl = model_config_save[
         "relative_intensity_std_error_pl"
     ]
-    sigma = model_config_save["sigma"]
+    noise_sigma = model_config_save["noise_sigma"]
     save_folder = model_config_save["save_folder"]
     fixed_parameters_dict = model_config_save["fixed_parameters_dict"]
     params_to_fit_init = model_config_save["params_to_fit_init"]
@@ -399,11 +419,9 @@ def plot_fit_to_experimental_data_sameaxis(
         )
     else:
         distribution = distribution.reshape(-1, distribution.shape[-1])
-        if filter_log_likelihood:
-            blobs = reader.get_blobs(flat=True, discard=discard)
-            distribution = distribution[
-                blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
-            ]
+        blobs = reader.get_blobs(flat=True, discard=discard)
+
+        distribution = eval(f" distribution[{filter_log_likelihood}]")
     true_parameters = fit_pl_utils.get_param_dict(
         params_to_fit_init, distribution[-1]
     )  # model_config_save['params_to_fit_init']#
@@ -424,22 +442,26 @@ def plot_fit_to_experimental_data_sameaxis(
         Exp_data,
     )
 
-
     # delete legend from ax
     for axis in ax:
         axis.get_legend().remove()
 
 
 def plot_distribution(
-    reader, model_config_save, discard=10, filter_log_likelihood=False,
-    fig=None,axes=None
+    reader,
+    model_config_save,
+    discard=10,
+    filter_log_likelihood="",
+    fig=None,
+    axes=None,
 ):
-    """plot the distribution of the parameters from the sampling output
+    """Plot the distribution of the parameters from the sampling output
     reader: the reader object from the emcee sampler
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
     csv_name = model_config_save["csv_name_pl"]
+    min_bounds_list, max_bounds_list = [], []
     label_list = []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
@@ -448,27 +470,37 @@ def plot_distribution(
                 for x in model_config_save["params_to_fit_init"][key].keys()
             ]
         )
+        min_bounds_list.extend(
+            [
+                model_config_save["min_bounds"][key][x]
+                for x in model_config_save["params_to_fit_init"][key].keys()
+            ]
+        )
+        max_bounds_list.extend(
+            [
+                model_config_save["max_bounds"][key][x]
+                for x in model_config_save["params_to_fit_init"][key].keys()
+            ]
+        )
+
     labels = label_list
     ndim = len(labels)
 
     distribution = reader.get_chain(discard=discard, flat=True)
-    if filter_log_likelihood:
-        blobs = reader.get_blobs(flat=True, discard=discard)
-        distribution = distribution[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
-        ]
+    blobs = reader.get_blobs(flat=True, discard=discard)
+    distribution_plot = eval(f" distribution[{filter_log_likelihood}]")
+    distribution_plot = distribution_plot.reshape(-1, ndim)
     if fig is None:
-        fig, axes = plt.subplots(5, figsize=(10, 7))
-    axes_xlim = [[1, 2], [0, 0.03], [0, 0.2], [0, 0.2], [0.1, 0.2]]
+        fig, axes = plt.subplots(ndim, figsize=(10, 7))
+    axes_xlim = [[x, y] for x, y in zip(min_bounds_list, max_bounds_list)]
     for i in range(ndim):
         ax = axes[i]
         ax.hist(
-            distribution[:, i],
+            distribution_plot[:, i],
             200,
             color="C" + str(i),
             linewidth=2,
             histtype="step",
-            
         )
         ax.set_ylabel(labels[i])
         ax.set_xlim(axes_xlim[i])
@@ -478,16 +510,23 @@ def plot_distribution(
 
 
 def plot_distribution_multi(
-    reader, model_config_save, discard=10, filter_log_likelihood=False,
-    fig=None,axes=None,legend_label='test',color='C1'
+    reader,
+    model_config_save,
+    discard=10,
+    filter_log_likelihood="",
+    fig=None,
+    axes=None,
+    legend_label="test",
+    color="C1",
 ):
-    """plot the distribution of the parameters from the sampling output
+    """Plot the distribution of the parameters from the sampling output
     reader: the reader object from the emcee sampler
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
     csv_name = model_config_save["csv_name_pl"]
     label_list = []
+    min_bounds_list, max_bounds_list = [], []
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
             [
@@ -495,18 +534,28 @@ def plot_distribution_multi(
                 for x in model_config_save["params_to_fit_init"][key].keys()
             ]
         )
+        min_bounds_list.extend(
+            [
+                model_config_save["min_bounds"][key][x]
+                for x in model_config_save["params_to_fit_init"][key].keys()
+            ]
+        )
+        max_bounds_list.extend(
+            [
+                model_config_save["max_bounds"][key][x]
+                for x in model_config_save["params_to_fit_init"][key].keys()
+            ]
+        )
+
     labels = label_list
     ndim = len(labels)
 
     distribution = reader.get_chain(discard=discard, flat=True)
-    if filter_log_likelihood:
-        blobs = reader.get_blobs(flat=True, discard=discard)
-        distribution = distribution[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
-        ]
+    blobs = reader.get_blobs(flat=True, discard=discard)
+    distribution = eval(f" distribution[{filter_log_likelihood}]")
     if fig is None:
         fig, axes = plt.subplots(5, figsize=(10, 7))
-    axes_xlim = [[1, 2], [0, 0.03], [0, 0.2], [0, 0.2], [0.1, 0.2]]
+    axes_xlim = [[x, y] for x, y in zip(min_bounds_list, max_bounds_list)]
     for i in range(ndim):
         ax = axes[i]
         ax.hist(
@@ -516,7 +565,7 @@ def plot_distribution_multi(
             linewidth=2,
             histtype="step",
             label=legend_label,
-            density=True
+            density=True,
         )
         ax.set_ylabel(labels[i])
         ax.set_xlim(axes_xlim[i])
@@ -524,15 +573,18 @@ def plot_distribution_multi(
     fig.tight_layout()
     return fig, axes
 
-def plot_corner(reader, model_config_save, discard=10,
-                filter_log_likelihood=False):
-    """plot the corner plot from the sampling output
+
+def plot_corner(
+    reader, model_config_save, discard=10, filter_log_likelihood=False
+):
+    """Plot the corner plot from the sampling output
     reader: the reader object from the emcee sampler
     model_config_save: the model config save dictionary
     discard: the number of samples to discard
     """
     csv_name = model_config_save["csv_name_pl"]
     label_list = []
+
     for key in model_config_save["params_to_fit_init"].keys():
         label_list.extend(
             [
@@ -542,11 +594,10 @@ def plot_corner(reader, model_config_save, discard=10,
         )
     labels = label_list
     samples = reader.get_chain(discard=discard, flat=True)
-    if filter_log_likelihood:
-        blobs = reader.get_blobs(flat=True, discard=discard)
-        samples = samples[
-            blobs["log_likelihood"] > max(blobs["log_likelihood"]) * 3
-        ]
+    blobs = reader.get_blobs(flat=True, discard=discard)
+    samples = eval(f" samples[{filter_log_likelihood}]")
+    samples = samples.reshape(-1, len(labels))
     df_samples = pd.DataFrame(samples, columns=labels)
     g = sns.pairplot(df_samples, kind="hist", corner=True)
     g.fig.suptitle(f"Sampler corner plot for {csv_name.split('/')[-1]}")
+    return g.fig, g.axes

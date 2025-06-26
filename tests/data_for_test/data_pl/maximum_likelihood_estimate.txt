@@ -1,0 +1,12 @@
+Maximum likelihood estimates:
+  EX_E = 1.402
+  Confidence interval: (np.float64(1.389546057019775), np.float64(1.4146129960359135)) 
+  EX_sigma = 0.098
+  Confidence interval: (np.float64(0.08585620468830597), np.float64(0.11092314370444452)) 
+  EX_Li = 0.077
+  Confidence interval: (np.float64(0.064170229367532), np.float64(0.08923716838367055)) 
+  EX_Lo = 0.111
+  Confidence interval: (np.float64(0.09864202624443129), np.float64(0.12370896526056983)) 
+  EX_hO = 0.150
+  Confidence interval: (np.float64(0.1376902696974485), np.float64(0.16275720871358704)) 
+Maximum log likelihood: 107.70633050102875

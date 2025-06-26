@@ -32,14 +32,20 @@ def add_plot_to_ax(hws, temperature_list, ax, model_data):
     ax.set_title("Posterior mean prediction")
 
 
-def get_covariance_matrix(true_model_pl_list, numnber_of_samples, model_config):
-    variance = np.var(np.array(true_model_pl_list), axis=0)+ model_config["sigma"]
+def get_covariance_matrix(
+    true_model_pl_list, numnber_of_samples, model_config
+):
+    variance = (
+        np.var(np.array(true_model_pl_list), axis=0)
+        + model_config["noise_sigma"]
+    )
     co_var_mat_test = np.cov(
         np.array(true_model_pl_list).reshape(numnber_of_samples, -1),
         rowvar=False,
     )
     np.fill_diagonal(
-        co_var_mat_test, co_var_mat_test.diagonal() +model_config["sigma"]
+        co_var_mat_test,
+        co_var_mat_test.diagonal() + model_config["noise_sigma"],
     )
     return co_var_mat_test, variance
 
@@ -72,7 +78,6 @@ def plot_mean_and_variance(
     print(f"shape of mean value plot is {mean_value_plot.shape}")
     # plot the generated data
     for i in range(len(temperature_list)):
-
         ax.plot(
             hws,
             mean_value_plot[:, i],
@@ -244,12 +249,12 @@ def plot_generated_data_pl(
         true_parameters {dict} -- true parameters for the model (default: {None})
 
     """
-    fig, ax = plt.subplots(1, 2, figsize=(10, 10))
+    fig, ax = plt.subplots(1, 2, figsize=(10, 7))
     true_model_pl_list = []
     true_model_el_list = []
 
     for x in range(numnber_of_samples):
-        model_data_pl,EX_kr, Ex_knr  = generate_data_utils.generate_data_pl(
+        model_data_pl, EX_kr, Ex_knr = generate_data_utils.generate_data_pl(
             **model_config,
             params_to_fit=params_to_fit,
             fixed_parameters_dict=fixed_parameters_dict,
@@ -260,7 +265,6 @@ def plot_generated_data_pl(
             model_config["hws_pl"],
             model_config["temperature_list_pl"],
         )
-
 
         add_plot_to_ax(
             model_config["hws_pl"],
@@ -283,11 +287,11 @@ def plot_generated_data_pl(
     # plot the generated data
     if savefig:
         import os
+
         os.makedirs(save_folder, exist_ok=True)
         fig.savefig(save_folder + "/generated_data.png")
     fig.tight_layout()
     return co_var_mat_test_pl, variance_pl
-
 
 
 def get_covariance_matrix_for_data_pl(
@@ -295,7 +299,7 @@ def get_covariance_matrix_for_data_pl(
 ):
     true_model_pl_list = []
     for x in range(numnber_of_samples):
-        model_data_pl,EX_kr, Ex_knr  = generate_data_utils.generate_data_pl(
+        model_data_pl, EX_kr, Ex_knr = generate_data_utils.generate_data_pl(
             **model_config,
             params_to_fit=params_to_fit,
             fixed_parameters_dict=fixed_parameters_dict,
@@ -306,7 +310,6 @@ def get_covariance_matrix_for_data_pl(
             model_config["hws_pl"],
             model_config["temperature_list_pl"],
         )
-
 
     co_var_mat_test_pl, variance_pl = get_covariance_matrix(
         true_model_pl_list, numnber_of_samples, model_config

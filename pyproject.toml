@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools_scm"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -18,6 +18,8 @@ dependencies = [
     "h5py",
     "openpyxl",
     "seaborn",
+    "tqdm",
+    "multiprocess",
 ]
 requires-python = ">=3.7"
 dynamic = ["version"]
@@ -46,12 +48,11 @@ documentation = "https://stk_search.readthedocs.io"
 
 [tool.ruff]
 line-length = 79
-extend-select = ["I"]
-
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["ANN101", "ANN401", "COM812", "ISC001","ANN001","ANN201","E501","ANN204","W"]
+extend-select = ["I"]
+ignore = ["ANN101", "ANN401", "COM812", "ISC001", "ANN001", "ANN201", "E501", "ANN204", "W", "D203", "D213"]
 extend-unsafe-fixes = ["N"]
 
 [tool.black]
