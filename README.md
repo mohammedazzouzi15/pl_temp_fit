@@ -1,6 +1,6 @@
 # PL Temperature Fitting
 
-**A professional Python package for temperature-dependent photoluminescence (PL) spectral analysis and fitting.**
+**A  Python package for temperature-dependent photoluminescence (PL) spectral analysis and fitting.**
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.txt)
@@ -9,7 +9,8 @@
 
 ## Overview
 
-This package provides a comprehensive toolkit for analyzing temperature-dependent photoluminescence (PL) spectra using advanced statistical methods including Markov Chain Monte Carlo (MCMC) sampling with the emcee library. It's designed for researchers working with organic semiconductors, perovskites, and other luminescent materials.
+This package provides a comprehensive toolkit for analyzing temperature-dependent photoluminescence (PL) spectra using advanced statistical methods including Markov Chain Monte Carlo (MCMC) sampling with the emcee library. It's designed for researchers working with organic semiconductors. 
+It uses the Marcus-Levish-Jortner formalism for electronic transition to simulate the PL spectra.
 
 ## Key Features
 
