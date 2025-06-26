@@ -22,7 +22,6 @@ __pycache__/*
 .idea
 .vscode
 tags
-notebook/experiemental_data/*
 
 # Package files
 *.egg
@@ -60,11 +59,9 @@ fit_results/*
 .conda*/
 .python-version
 *.png
+slurm_script/error/*
+slurm_script/output/*
 *.h5
-fit_experimental_emcee_pl/fit_data_base/*.json
-fit_experimental_emcee_pl/fit_data/*/*/*/*/maximum_likelihood_estimate.txt
-fit_experimental_emcee_pl/fit_data_base/*
-slurm_script/fit_experimental_emcee_pl/config/*.sh
-
+fit_experimental_emcee_pl
+*.json
 copilot_prompts.txt
-fit_experimental_emcee_pl/fit_data/*
