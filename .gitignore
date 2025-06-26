@@ -63,3 +63,8 @@ fit_results/*
 *.h5
 fit_experimental_emcee_pl/fit_data_base/*.json
 fit_experimental_emcee_pl/fit_data/*/*/*/*/maximum_likelihood_estimate.txt
+fit_experimental_emcee_pl/fit_data_base/*
+slurm_script/fit_experimental_emcee_pl/config/*.sh
+
+copilot_prompts.txt
+fit_experimental_emcee_pl/fit_data/*
