@@ -317,3 +317,99 @@ def plot_fit_limits(model_config, model_config_save):
         )
         fig.suptitle(title_list[_id])
         fig.savefig(save_folder + f"/PL_fit{_id}.png")
+
+
+def plot_fit_limits_overlay(model_config, model_config_save):
+    """Overlay the results for initial, min, and max parameters on the same plot for each temperature."""
+    fixed_parameters_dict, params_to_fit, min_bound, max_bound = (
+        config_utils.get_dict_params(model_config_save)
+    )
+    csv_name = model_config_save["csv_name_pl"]
+    Exp_data, temperature_list, hws = Exp_data_utils.read_data(csv_name)
+    save_folder = model_config_save["save_folder"]
+    co_var_mat_pl, variance_pl = covariance_utils.plot_generated_data_pl(
+        save_folder,
+        model_config,
+        savefig=False,
+        fixed_parameters_dict=fixed_parameters_dict,
+        params_to_fit=model_config_save["params_to_fit_init"],
+    )
+    param_sets = [
+        (model_config_save["params_to_fit_init"], "Initial", "C0", "-"),
+        (model_config_save["min_bounds"], "Min Bound", "C1", "--"),
+        (model_config_save["max_bounds"], "Max Bound", "C2", ":"),
+    ]
+    # Get model results for each parameter set
+    pl_results_list = []
+    abs_results_list = []
+    for paramers, label, color, style in param_sets:
+        # Use the pl_trial logic from plot_exp_data_with_variance
+        from pl_temp_fit.model_function import LTL
+
+        def pl_trial(
+            temperature_list_pl,
+            hws_pl,
+            fixed_parameters_dict={},
+            params_to_fit={},
+        ):
+            data = LTL.Data()
+            data.update(**fixed_parameters_dict)
+            data.update(**params_to_fit)
+            data.D.Luminecence_exp = "PL"
+            data.D.T = temperature_list_pl
+            LTL.ltlcalc(data)
+            pl_results = data.D.kr_hw
+            pl_results_interp = np.zeros(
+                (len(hws_pl), len(temperature_list_pl))
+            )
+            abs_results_interp = np.zeros(
+                (len(hws_pl), len(temperature_list_pl))
+            )
+            for i in range(len(temperature_list_pl)):
+                pl_results_interp[:, i] = np.interp(
+                    hws_pl, data.D.hw, pl_results[:, i]
+                )
+                abs_results_interp[:, i] = np.interp(
+                    hws_pl, data.D.hw, data.D.alpha[:, i]
+                )
+            pl_results_interp = (
+                pl_results_interp
+                / pl_results_interp[pl_results_interp > 0].max()
+            )
+            abs_results_interp = (
+                abs_results_interp / abs_results_interp.reshape(-1).max()
+            )
+            return pl_results_interp, abs_results_interp
+
+        pl_results, abs_results = pl_trial(
+            model_config["temperature_list_pl"],
+            model_config["hws_pl"],
+            fixed_parameters_dict,
+            paramers,
+        )
+        pl_results_list.append((pl_results, label, color, style))
+        abs_results_list.append((abs_results, label, color, style))
+    # Plot overlay
+    fig, axis = Exp_data_utils.plot_pl_data_with_variance(
+        Exp_data,
+        model_config["temperature_list_pl"],
+        model_config["hws_pl"],
+        variance_pl,
+        save_folder,
+    )
+    for i, axes in enumerate(axis):
+        for pl_results, label, color, style in pl_results_list:
+            axes.plot(
+                model_config["hws_pl"],
+                pl_results[:, i],
+                label=f"PL {label}",
+                color=f"C{i}",
+                linestyle=style,
+            )
+        
+        axes.legend()
+        axes.set_ylim(0, 1.1)
+    fig.suptitle("PL Fit Limits Overlay")
+    fig.tight_layout(h_pad=0.0)
+    fig.savefig(save_folder + "/PL_fit_limits_overlay.png")
+    return fig, axis

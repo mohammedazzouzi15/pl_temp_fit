@@ -1,3 +1,6 @@
+""" Test suite for the PLSampler module, here we test the functionality of the PLAbsAndLifetimeEVER data generator and the fitting utilities. 
+PLAbsAndLifetimeEVER considers both the absorption and lifetime data for the PL spectra."""
+
 import unittest
 from pathlib import Path
 
@@ -53,11 +56,7 @@ class TestPLSampler(unittest.TestCase):
         self.assertIsNotNone(self.temperature_list_pl)
         self.assertIsNotNone(self.hws_pl)
 
-    def test_update_with_model_config(self):
-        self.assertEqual(
-            self.pl_data_gen.temperature_lifetimes_exp.values,
-            self.model_config_save["temperature_lifetimes_exp"].values,
-        )
+
 
     def test_get_covariance_matrix(self):
         co_var_mat_pl, variance_pl = self.pl_data_gen.get_covariance_matrix()

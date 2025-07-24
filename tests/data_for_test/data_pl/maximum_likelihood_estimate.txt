@@ -1,12 +1,12 @@
 Maximum likelihood estimates:
-  EX_E = 1.402
-  Confidence interval: (np.float64(1.389546057019775), np.float64(1.4146129960359135)) 
-  EX_sigma = 0.098
-  Confidence interval: (np.float64(0.08585620468830597), np.float64(0.11092314370444452)) 
-  EX_Li = 0.077
-  Confidence interval: (np.float64(0.064170229367532), np.float64(0.08923716838367055)) 
-  EX_Lo = 0.111
-  Confidence interval: (np.float64(0.09864202624443129), np.float64(0.12370896526056983)) 
+  EX_E = 1.400
+  Confidence interval confidence_level 0.99: (1.3781585795369418, 1.4217354826551307) 
+  EX_sigma = 0.099
+  Confidence interval confidence_level 0.99: (0.08123761112034276, 0.11761245178424383) 
+  EX_Li = 0.081
+  Confidence interval confidence_level 0.99: (0.07098557428492358, 0.09017050330281581) 
+  EX_Lo = 0.113
+  Confidence interval confidence_level 0.99: (0.0992645734446875, 0.12660515074295892) 
   EX_hO = 0.150
-  Confidence interval: (np.float64(0.1376902696974485), np.float64(0.16275720871358704)) 
-Maximum log likelihood: 107.70633050102875
+  Confidence interval confidence_level 0.99: (0.13987906361478353, 0.15939731332011425) 
+Maximum log likelihood: 592.0762289121523

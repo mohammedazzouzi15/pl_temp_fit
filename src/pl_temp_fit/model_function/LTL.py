@@ -86,12 +86,12 @@ class Data:
 
     Attributes
     ----------
-    - EX (State): The state of the system
-    - CT (State): The state of the system
-    - D (DataParams): The parameters of the data
+    - EX (State): The Exciton state of the system
+    - CT (State): The CT state of the system
+    - D (DataParams): Extra parameters of the system, such as temperature, density of states, etc.
     - I0 (LightSource): The light source used in the simulation
     - c (Constants): The constants used in the simulation
-    - xParam (dict): The parameters of the simulation
+    - xParam (dict): The parameter related to the choice of the distribution of the states, such as the coefficient of the Gaussian and exponential distributions
 
     """
 
@@ -132,6 +132,7 @@ class Data:
         self.EX.update(**kwargs["EX"])
         self.CT.update(**kwargs["CT"])
         self.D.update(**kwargs["D"])
+        self.I0.update(**kwargs["I0"])
 
     def get_delta_voc_nr(self):
         raditaive_decay = self.CT.kr + self.EX.kr
@@ -253,7 +254,6 @@ class DataParams:
         self.kEXCT = 1e11  # Example value, replace with your actual data
         self.RCTE = 2.0  # Example value, replace with your actual data
         self.hw = np.arange(0, 5, 0.01)
-        self.n = 1.0
         self.Luminecence_exp = "PL"  # 'PL' or 'EL
         self.log_kEXCT = 11
         self.nie = 1.5
@@ -272,3 +272,8 @@ class LightSource:
     def __init__(self):
         self.Laser_hw = 1.7  # Example value, replace with your actual data
         self.Laser_B = 0.1  # Example value, replace with your actual data
+
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        # Add any additional logic needed to update the light source parameters

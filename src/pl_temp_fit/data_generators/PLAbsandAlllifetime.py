@@ -42,7 +42,7 @@ class PLAbsandAlllifetime(SpectralDataGeneration):
         temperature_lifetimes_exp = {}
         # change the keys of the dictionary to integers
         self.temperature_lifetimes_exp = {
-            int(k): v for k, v in self.temperature_lifetimes_exp.items()
+            float(k): v for k, v in self.temperature_lifetimes_exp.items()
         }
         for temp, exp_lifetime in self.temperature_lifetimes_exp.items():
             index = np.argwhere(self.temperature_list == temp)
