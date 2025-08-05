@@ -62,6 +62,7 @@ def plot_fit_statistics(
     for i in range(3):
         ax[i].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     plt.show()
+    return fig, ax
 
 
 def plot_fit_statistics_multi(
@@ -129,6 +130,48 @@ def plot_fit_statistics_multi(
     return fig, ax
 
 
+def plot_blobs_chain(
+    reader,
+    discard=0,
+    temp_lifetime=[60, 140, 220, 300],
+    filter_log_likelihood="",
+):
+    blobs = reader.get_blobs(discard=discard)
+    # blobs = eval(f"blobs[{filter_log_likelihood}]")
+    num_blobs = len(blobs.dtype.names)
+    fig, axes = plt.subplots(
+        num_blobs + 1, figsize=(10, 1.5 * num_blobs), sharex=True
+    )
+    for i in range(num_blobs):
+        ax = axes[i]
+        ax.plot(blobs[blobs.dtype.names[i]], alpha=0.3, color="C" + str(i))
+        ax.set_xlim(0, len(blobs))
+        ax.set_ylabel(blobs.dtype.names[i])
+        ax.yaxis.set_label_coords(-0.1, 0.5)
+    lifetime_dict = {}
+    for temp in temp_lifetime:
+        try:
+            lifetime_dict[temp] = (
+                1 / (blobs[f"Ex_kr_{temp}K"] + blobs[f"Ex_knr_{temp}K"]) * 1e9
+            )
+        except ValueError:
+            print(
+                f"ValueError: One of the keys for temperature {temp} not found in blobs"
+            )
+
+    ax = axes[i + 1]
+    for i, (temp, lifetime) in enumerate(lifetime_dict.items()):
+        ax.plot(lifetime, alpha=0.3, color="C" + str(i + 1), label=f"{temp} K")
+    ax.set_xlim(0, len(blobs))
+    ax.set_ylabel("Lifetime (ns)")
+    ax.yaxis.set_label_coords(-0.1, 0.5)
+    ax.set_xlabel("Step number")
+    ax.legend()
+    # ax.set_ylim(0, 2)
+    fig.tight_layout()
+    return fig, axes
+
+
 def plot_lifetime(
     reader,
     range_chi_square=(7, 11),
@@ -151,11 +194,12 @@ def plot_lifetime(
             blobs["log_likelihood_spectra"]
             > max(blobs["log_likelihood_spectra"]) * 3
         ]
+
     fig, ax = plt.subplots(2, 2, figsize=(7, 5))
 
     ax = ax.flatten()
     ax[0].hist(
-        np.log10(blobs["Ex_knr"]),
+        np.log10(blobs["Ex_knr_" + str(temperature) + "K"]),
         30,
         histtype="step",
         range=range_chi_square,
@@ -165,7 +209,7 @@ def plot_lifetime(
     ax[0].set_xlabel("Log of k_nr at " + str(temperature) + " K")
     ax[0].set_ylabel("Number of samples")
     ax[1].hist(
-        np.log10(blobs["Ex_kr"]),
+        np.log10(blobs["Ex_kr_" + str(temperature) + "K"]),
         30,
         histtype="step",
         range=range_log_prior,
@@ -174,7 +218,7 @@ def plot_lifetime(
     )
     ax[1].set_xlabel("Log of k_r at " + str(temperature) + " K")
     ax[1].set_ylabel("Number of samples")
-    pl_QE = blobs["Ex_kr"] / (blobs["Ex_kr"] + blobs["Ex_knr"])
+    pl_QE = blobs["Ex_kr_" + str(temperature) + "K"] / (blobs["Ex_kr_" + str(temperature) + "K"] + blobs["Ex_knr_" + str(temperature) + "K"])
     ax[2].hist(
         np.log10(pl_QE),
         30,
@@ -185,7 +229,7 @@ def plot_lifetime(
     )
     ax[2].set_xlabel("log PL QE")
     ax[2].set_ylabel("Numer of samples")
-    lifetime = 1 / (blobs["Ex_kr"] + blobs["Ex_knr"])
+    lifetime = 1 / (blobs["Ex_kr_" + str(temperature) + "K"] + blobs["Ex_knr_" + str(temperature) + "K"])
     ax[3].hist(
         lifetime * 1e9,
         30,
@@ -300,6 +344,7 @@ def plot_diff_chains(
     axes[-1].set_xlabel("step number")
     fig.suptitle(f"Sampler chain for {csv_name.split('/')[-1]}")
     fig.show()
+    return fig, axes
 
 
 def plot_fit_to_experimental_data(

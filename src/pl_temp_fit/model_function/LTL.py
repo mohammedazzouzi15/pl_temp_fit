@@ -132,7 +132,8 @@ class Data:
         self.EX.update(**kwargs["EX"])
         self.CT.update(**kwargs["CT"])
         self.D.update(**kwargs["D"])
-        self.I0.update(**kwargs["I0"])
+        if "I0" in kwargs:
+            self.I0.update(**kwargs["I0"])
 
     def get_delta_voc_nr(self):
         raditaive_decay = self.CT.kr + self.EX.kr

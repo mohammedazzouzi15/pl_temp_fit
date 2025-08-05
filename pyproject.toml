@@ -20,6 +20,8 @@ dependencies = [
     "seaborn",
     "tqdm",
     "multiprocess",
+    "streamlit",
+    "plotly"
 ]
 requires-python = ">=3.7"
 dynamic = ["version"]
