@@ -138,7 +138,7 @@ def data_management_tab():
             if tab_selection == "Using paths":
                 st.session_state["csv_name"] = st.text_input(
                     "PL Data CSV Filename",
-                    value="experimental_data/y6_example/example_PL_data_Y6.csv",
+                    value="example/experimental_data/y6_example/example_PL_data_Y6.csv",
                     help="CSV file containing photoluminescence data",
                 )
                 st.session_state["lifetime_csv"] = st.text_input(
@@ -755,17 +755,17 @@ def main():
 
         figures_dir = st.text_input(
             "Figures Directory",
-            value="figures",
+            value="example/figures",
             help="Directory to save generated plots",
         )
         fit_data_base_dir = st.text_input(
             "Fit Database Directory",
-            value="fit_data_base",
+            value="example/fit_data_base",
             help="Directory for fit configurations and results",
         )
         fit_data_dir = st.text_input(
             "Fit Data Directory",
-            value="fit_data",
+            value="example/fit_data",
             help="Directory for processed data files",
         )
 
