@@ -615,7 +615,7 @@ def fitting_tab():
         # Fitting parameters
         with st.expander("⚙️ Fitting Parameters", expanded=False):
             nsteps = st.number_input(
-                "Number of Steps", value=500, min_value=10, max_value=5000
+                "Number of Steps", value=50, min_value=10, max_value=5000
             )
             st.info("💡 More steps = better convergence but longer runtime")
 
