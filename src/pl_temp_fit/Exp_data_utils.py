@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -95,7 +93,7 @@ def plot_pl_data(
 
 
 def change_wavelength_range(
-    csv_name, hws_limits=[0.95, 1.6], step=0.01, temperature_split=[]
+    csv_name, hws_limits=[0.95, 1.6], step=0.01, temperature_list=None
 ):
     """Adjust the wavelength range of experimental data and splits the data based on temperature ranges.
 
@@ -113,41 +111,40 @@ def change_wavelength_range(
     """
     data, temperature_list_old, hws_old = read_data(csv_name)
     print(temperature_list_old)
-    temperature_split.append((0, 500))
+    if temperature_list is not None:
+        temperature_list = np.array(
+            [temp for temp in temperature_list_old if temp in temperature_list]
+        )
+    else:
+        temperature_list = temperature_list_old
     csv_names = []
     csv_name = csv_name.absolute().as_posix()
-    for temp_split in temperature_split:
-        temperature_list = temperature_list_old[
-            temperature_list_old > temp_split[0]
-        ]
-        temperature_list = temperature_list[temperature_list < temp_split[1]]
-        list_i = [
-            i
-            for i in range(len(temperature_list_old))
-            if temperature_list_old[i] in temperature_list
-        ]
-        hws = np.arange(hws_limits[0], hws_limits[1], step)
-        y = np.zeros((hws.size, 1 + len(temperature_list)))
-        y[:, 0] = hws
-        for _j, _i in enumerate(list_i):
-            f = interpolate.interp1d(
-                hws_old, data[:, _i], axis=0, fill_value="extrapolate"
-            )
-            y[:, _j + 1] = f(hws)
-        data_new = np.zeros((len(temperature_list) + 1, len(hws) + 1))
-        data_new[:, 1:] = y.transpose()
-        data_new[1:, 0] = temperature_list
-        data_new = pd.DataFrame(data_new, columns=["Temperature"] + list(hws))
-        new_csv_name = f'{csv_name.replace(".csv",f"_mod_split{temp_split[0]}_split{temp_split[1]}.csv")}'
-        data_new.to_csv(
-            new_csv_name,
-            index=None,
-            header=None,
+
+    list_i = [
+        i
+        for i in range(len(temperature_list_old))
+        if temperature_list_old[i] in temperature_list
+    ]
+    hws = np.arange(hws_limits[0], hws_limits[1], step)
+    y = np.zeros((hws.size, 1 + len(temperature_list)))
+    y[:, 0] = hws
+    for _j, _i in enumerate(list_i):
+        f = interpolate.interp1d(
+            hws_old, data[:, _i], axis=0, fill_value="extrapolate"
         )
-        print(new_csv_name)
-        csv_names.append(Path(new_csv_name))
-    temp_split = temperature_split[0]
-    return csv_names
+        y[:, _j + 1] = f(hws)
+    data_new = np.zeros((len(temperature_list) + 1, len(hws) + 1))
+    data_new[:, 1:] = y.transpose()
+    data_new[1:, 0] = temperature_list
+    data_new = pd.DataFrame(data_new, columns=["Temperature"] + list(hws))
+    new_csv_name = f'{csv_name.replace("_mod","").replace(".csv","_mod.csv")}'
+    data_new.to_csv(
+        new_csv_name,
+        index=None,
+        header=None,
+    )
+
+    return new_csv_name
 
 
 def from_xslx_to_csv(xlsx_file):

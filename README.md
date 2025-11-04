@@ -7,6 +7,14 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+---
+
+> **🚀 NEW: Interactive Streamlit App Available!**  
+> Analyze your PL data with a user-friendly web interface - no coding required!  
+> **[Launch App](example/)** | **[Quick Start Guide](example/QUICKSTART.md)** | **[Full Documentation](example/STREAMLIT_APP_GUIDE.md)**
+
+---
+
 ## Overview
 
 This package provides a comprehensive toolkit for analyzing temperature-dependent photoluminescence (PL) spectra using advanced statistical methods including Markov Chain Monte Carlo (MCMC) sampling with the emcee library. It's designed for researchers working with organic semiconductors. 
@@ -20,6 +28,62 @@ It uses the Marcus-Levish-Jortner formalism for electronic transition to simulat
 - **Covariance analysis**: Statistical uncertainty quantification
 - **Professional visualization**: High-quality plots for publications
 - **Extensible framework**: Easy to add new models and analysis methods
+
+## 🚀 Interactive Streamlit App
+
+**NEW!** We now provide an interactive web-based application for easy data analysis without writing code!
+
+### Quick Launch
+
+```bash
+cd example/
+streamlit run streamlit_app.py
+```
+
+The app provides a complete workflow interface with:
+
+- 📂 **Data Management**: Load and modify PL spectra and lifetime data
+- ⚙️ **Model Configuration**: Interactive parameter setup with visual feedback
+- 🔄 **MCMC Fitting**: Run Bayesian parameter estimation with progress monitoring
+- 📊 **Results Analysis**: Interactive plots with zoom, pan, and export capabilities
+
+### Features
+
+✨ **User-Friendly Interface**
+- No coding required - complete analysis through web browser
+- Real-time data visualization with interactive Plotly charts
+- Step-by-step guided workflow with status indicators
+
+✨ **Advanced Capabilities**
+- Live data modification (wavelength range, temperature selection)
+- Visual parameter validation (state diagrams, fit limits preview)
+- MCMC convergence monitoring with detailed logs
+- Comprehensive results visualization (corner plots, chain plots, fit quality)
+
+✨ **Professional Output**
+- High-resolution figure export (PNG format)
+- Configuration persistence for reproducibility
+- Detailed analysis reports
+
+### Documentation
+
+- **[Quick Start Guide](example/QUICKSTART.md)**: Get started in 5 minutes
+- **[Complete App Guide](example/STREAMLIT_APP_GUIDE.md)**: Comprehensive documentation
+- **[Cheatsheet](example/APP_CHEATSHEET.md)**: Quick reference for common tasks
+- **[Example Directory](example/README.md)**: Overview and examples
+
+### Example Data Included
+
+Try the app immediately with included Y6 organic semiconductor data:
+- Temperature-dependent PL spectra (290-350K)
+- Lifetime measurements
+- Pre-configured analysis examples
+
+**Perfect for:**
+- New users learning the package
+- Quick exploratory analysis
+- Teaching and demonstrations
+- Rapid prototyping of fitting strategies
 
 ## Installation
 
@@ -60,7 +124,18 @@ pytest tests/
 
 ## Quick Start
 
-### Basic Usage
+### Option 1: Interactive App (Recommended for Beginners)
+
+Launch the Streamlit app for a guided, no-code experience:
+
+```bash
+cd example/
+streamlit run streamlit_app.py
+```
+
+Then follow the workflow in your browser. See the [Quick Start Guide](example/QUICKSTART.md) for details.
+
+### Option 2: Python API (For Advanced Users)
 
 ```python
 import numpy as np
@@ -125,6 +200,13 @@ This package implements advanced models for temperature-dependent photoluminesce
 - **Quantum dots**: Size distribution effects
 
 ## Documentation
+
+### Streamlit App Documentation
+
+- **[Streamlit App Guide](example/STREAMLIT_APP_GUIDE.md)**: Complete guide to the interactive app
+- **[Quick Start](example/QUICKSTART.md)**: Get started in 5 minutes
+- **[Cheatsheet](example/APP_CHEATSHEET.md)**: Quick reference and tips
+- **[Examples](example/README.md)**: Example data and workflows
 
 ### Key Modules
 

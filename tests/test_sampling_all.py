@@ -1,3 +1,7 @@
+"""Test suite for the PLSampler module, here we test the functionality of the PLAbsandAlllifetime data generator and the fitting utilities.
+PLAbsandAlllifetime considers both the absorption and lifetime data for the PL spectra.
+"""
+
 import logging
 import unittest
 from pathlib import Path

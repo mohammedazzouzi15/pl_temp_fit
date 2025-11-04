@@ -51,7 +51,7 @@ def kabs(State, C, data, xParam):
     M = tdm(State, C)
     Zabs = Z_abs(State, xParam)
     integral = (
-        (data.n / C.c)
+        (data.nie / C.c)
         * (1 / (6 * C.E0 * C.hbar))
         * M**2
         * FCWD

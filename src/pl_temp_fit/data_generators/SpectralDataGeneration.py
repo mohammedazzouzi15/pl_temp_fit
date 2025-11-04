@@ -183,10 +183,10 @@ class SpectralDataGeneration:
 
     def update_params_to_fit(self, theta):
         """Update the parameters to fit with the new values of theta."""
-        params_to_fit_updated = {"EX": {}, "CT": {}, "D": {}}
+        params_to_fit_updated = {"EX": {}, "CT": {}, "D": {}, "I0": {}}
         counter = 0
         try:
-            for key in ["EX", "CT", "D"]:
+            for key in ["EX", "CT", "D", "I0"]:
                 if self.params_to_fit_init[key] == {}:
                     continue
                 for id, key2 in enumerate(self.params_to_fit_init[key].keys()):
@@ -270,7 +270,7 @@ class SpectralDataGeneration:
 
         """
         counter = 0
-        for param_key in ["EX", "CT", "D"]:
+        for param_key in ["EX", "CT", "D", "I0"]:
             if self.min_bounds[param_key] == {}:
                 continue
 
@@ -350,7 +350,7 @@ class SpectralDataGeneration:
         with open(save_folder + "/maximum_likelihood_estimate.txt", "w") as f:
             f.write("Maximum likelihood estimates:\n")
             counter = 0
-            for key in ["EX", "CT", "D"]:
+            for key in ["EX", "CT", "D", "I0"]:
                 if self.params_to_fit_init[key] == {}:
                     continue
                 for key2 in self.params_to_fit_init[key].keys():
@@ -389,7 +389,7 @@ class SpectralDataGeneration:
         """Get the initial coordinates for the simple fit."""
         init_params, min_bound_list, max_bound_list = [], [], []
         counter = 0
-        for key in ["EX", "CT", "D"]:
+        for key in ["EX", "CT", "D", " I0"]:
             if self.params_to_fit_init[key] == {}:
                 continue
             for key2 in self.params_to_fit_init[key].keys():

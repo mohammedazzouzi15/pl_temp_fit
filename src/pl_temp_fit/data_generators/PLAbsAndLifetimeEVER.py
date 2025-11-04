@@ -111,6 +111,12 @@ class PLAbsAndLifetimeEVER(SpectralDataGeneration):
         lifetime_errors = []
 
         for temp, exp_lifetime in self.temperature_lifetimes_exp.items():
+            if temp not in self.temperature_list:
+                logging.debug(f"Temperature speciffied for the lifetime {temp} not found in the spectral data")
+                raise ValueError(
+                    f"Temperature speciffied for the lifetime {temp} not found in the spectral data"
+                    "Please check the temperature list."
+                )
             index = np.argwhere(self.temperature_list == temp)[0][0]
             calculated_lifetime = 1 / (
                 data.EX.knr[0][index] + data.EX.kr[index]
