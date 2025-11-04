@@ -43,7 +43,7 @@ pandas==2.3.3
 parso==0.8.5
 pexpect==4.9.0
 pillow==12.0.0
--e git+https://github.com/Jenny-Nelson-Group/pl_temp_fit.git@5a9b3241c684cee3a0e1b805a834a20a05816b1c#egg=pl_temp_fit
+-e git+https://github.com/mohammedazzouzi15/pl_temp_fit.git@ec57cdb0cb44aadf125571c18bf52945cdb63483#egg=pl_temp_fit
 platformdirs==4.5.0
 plotly==6.3.1
 prompt_toolkit==3.0.52
