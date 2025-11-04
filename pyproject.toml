@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pl_temp_fit"
 maintainers = [
-  { name = "Mohammed Azzouzi", email = "mohammed.azzouzi15@ic.ac.uk" },
+  { name = "Mohammed Azzouzi", email = "mohammed.azzouzi@epfl.ch" },
 ]
 
 dependencies = [
@@ -21,7 +21,7 @@ dependencies = [
     "tqdm",
     "multiprocess",
     "streamlit",
-    "plotly"
+    "plotly",
 ]
 requires-python = ">=3.7"
 dynamic = ["version"]

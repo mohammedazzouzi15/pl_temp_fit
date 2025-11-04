@@ -1,5 +1,5 @@
 """Interactive plotting utilities using Plotly for enhanced user experience."""
-
+import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -353,6 +353,7 @@ def plot_chains_interactive(reader, model_config_save, discard=50):
     )
 
     colors = px.colors.qualitative.Set3
+    colors = [c for c in px.colors.qualitative.Set3 if c.lower() not in ['#ffffb3', '#ffffb3'.lower(), 'rgb(255, 255, 179)', 'rgb(255,255,179)']]
 
     for i, label in enumerate(labels):
         # Plot all chains for this parameter
@@ -611,6 +612,7 @@ def plot_blobs_chain_interactive(
     )
 
     colors = px.colors.qualitative.Set3
+    colors = [c for c in px.colors.qualitative.Set3 if c.lower() not in ['#ffffb3', '#ffffb3'.lower(), 'rgb(255, 255, 179)', 'rgb(255,255,179)']]
 
     # Plot blob chains
     for i in range(num_blobs):
@@ -618,18 +620,18 @@ def plot_blobs_chain_interactive(
         fig.add_trace(
             go.Scatter(
                 x=list(range(len(blobs[blob_name]))),
-                y=blobs[blob_name],
+                y=blobs[blob_name][0],
                 mode="lines",
                 name=blob_name,
-                line=dict(color=colors[i % len(colors)], width=1),
+                line=dict(color=colors[i % len(colors)], width=3),
                 opacity=0.7,
                 showlegend=False,
-                hovertemplate=f"{blob_name}<br>Step: %{{x}}<br>Value: %{{y:.4f}}<extra></extra>",
+                hovertemplate=f"{blob_name}<br>Step: %{{x}}<br>Value: %{{y:.2f}}<extra></extra>",
             ),
             row=i + 1,
             col=1,
         )
-        fig.update_yaxes(title_text=blob_name, row=i + 1, col=1)
+        fig.update_yaxes(title_text=blob_name, row=i + 1, col=1, tickformat=".2e")
 
     # Calculate and plot lifetimes
     lifetime_dict = {}
@@ -659,8 +661,8 @@ def plot_blobs_chain_interactive(
             col=1,
         )
 
-    fig.update_yaxes(title_text="Lifetime (ns)", row=num_blobs + 1, col=1)
-    fig.update_xaxes(title_text="Step Number", row=num_blobs + 1, col=1)
+    fig.update_yaxes(title_text="Lifetime (ns)", row=num_blobs + 1, col=1,tickformat=".2f")
+    fig.update_xaxes(title_text="Step Number", row=num_blobs + 1, col=1,tickformat=".2f")
 
     fig.update_layout(
         height=150 * (num_blobs + 1),

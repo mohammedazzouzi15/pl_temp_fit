@@ -137,7 +137,7 @@ def change_wavelength_range(
     data_new[:, 1:] = y.transpose()
     data_new[1:, 0] = temperature_list
     data_new = pd.DataFrame(data_new, columns=["Temperature"] + list(hws))
-    new_csv_name = f'{csv_name.replace(".csv","_mod.csv")}'
+    new_csv_name = f'{csv_name.replace("_mod","").replace(".csv","_mod.csv")}'
     data_new.to_csv(
         new_csv_name,
         index=None,

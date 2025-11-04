@@ -2,7 +2,7 @@ import emcee
 import streamlit as st
 
 from pl_temp_fit import config_utils, plot_utils
-from app_utils.plot_utils_interactive import (
+from pl_temp_fit.app_utils.plot_utils_interactive import (
     plot_state_diagram_interactive,
     plot_fit_statistics_interactive,
     plot_chains_interactive,
@@ -131,7 +131,7 @@ def plot_selection_tabbed():
                             range_chi_square=range_chi_square,
                             filter_log_likelihood=filter_log_likelihood,
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width='stretch')
 
             elif plot_type == "Fit to Experimental Data":
                 discard = st.slider("Discard", 0, 1000, 300)
@@ -179,7 +179,7 @@ def plot_selection_tabbed():
                 ):
                     with plot_col, st.spinner("Generating plot..."):
                         fig = plot_chains_interactive(reader, model_config_save, discard=discard)
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width='stretch')
 
             elif chain_plot_type == "Selected Chains":
                 discard = st.slider(
@@ -224,7 +224,7 @@ def plot_selection_tabbed():
                             discard=discard,
                             temp_lifetime=temp_lifetimes,
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width='stretch')
 
     with tab3:
         st.header("Parameter Distributions")
@@ -259,7 +259,7 @@ def plot_selection_tabbed():
                             discard=discard,
                             filter_log_likelihood=filter_condition or "",
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width='stretch')
 
             elif dist_plot_type == "Corner Plot":
                 discard = st.slider(
@@ -280,7 +280,7 @@ def plot_selection_tabbed():
                             discard=discard,
                             filter_log_likelihood=filter_condition or "",
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width='stretch')
 
             elif dist_plot_type == "Lifetime Distribution":
                 discard = st.slider(
@@ -306,7 +306,7 @@ def plot_selection_tabbed():
                             temperature=temperature,
                             filter_log_likelihood=filter_log_likelihood,
                         )
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, width='stretch')
 
     with tab4:
         st.header("Advanced Analysis")
@@ -332,7 +332,7 @@ def plot_selection_tabbed():
                     if model_config_save:
                         with plot_col, st.spinner("Generating state diagram..."):
                             fig = plot_state_diagram_interactive(model_config_save)
-                            st.plotly_chart(fig, use_container_width=True)
+                            st.plotly_chart(fig, width='stretch')
                     else:
                         st.error("❌ Model configuration not available")
             

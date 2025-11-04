@@ -5,34 +5,51 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from app_utils.config_utils import generate_and_save_model_config
-from app_utils.data_utils import (
+
+from pl_temp_fit import Exp_data_utils, config_utils, fit_pl_utils
+from pl_temp_fit.app_utils.config_utils import generate_and_save_model_config
+from pl_temp_fit.app_utils.data_utils import (
     ensure_directories,
     load_and_plot_data,
     modify_and_plot_data,
 )
-from app_utils.lifetime_utils import read_lifetime_data
-from app_utils.params_utils import model_parameters_form
-from app_utils.plot_display_utils import plot_selection, read_results
-from app_utils.plot_utils_interactive import (
+from pl_temp_fit.app_utils.lifetime_utils import read_lifetime_data
+from pl_temp_fit.app_utils.params_utils import model_parameters_form
+from pl_temp_fit.app_utils.plot_display_utils import (
+    plot_selection,
+    read_results,
+)
+from pl_temp_fit.app_utils.plot_utils_interactive import (
     plot_fit_limits_overlay_interactive,
     plot_state_diagram_interactive,
 )
-
-from pl_temp_fit import Exp_data_utils, config_utils, fit_pl_utils
 from pl_temp_fit.data_generators import PLAbsandAlllifetime
 
 
 def run_fit(
     model_config_save,
+    status_placeholder=None,
+    progress_bar=None,
 ):
     csv_name_pl = model_config_save["csv_name_pl"]
     save_folder = model_config_save["save_folder"]
     Path(save_folder).mkdir(parents=True, exist_ok=True)
+
+    if status_placeholder:
+        status_placeholder.info("📂 Loading experimental data...")
+    if progress_bar:
+        progress_bar.progress(0.1)
+
     # Load the data
     Exp_data_pl, temperature_list_pl, hws_pl = Exp_data_utils.read_data(
         csv_name_pl
     )
+
+    if status_placeholder:
+        status_placeholder.info("🔧 Initializing data generator...")
+    if progress_bar:
+        progress_bar.progress(0.2)
+
     # initialising the data generator
     pl_data_gen = PLAbsandAlllifetime.PLAbsandAlllifetime(
         temperature_list_pl, hws_pl
@@ -49,7 +66,20 @@ def run_fit(
     ]
     pl_data_gen.update_with_model_config(model_config_save)
 
+    if status_placeholder:
+        status_placeholder.info("📊 Computing covariance matrix...")
+    if progress_bar:
+        progress_bar.progress(0.3)
+
     co_var_mat_pl, variance_pl = pl_data_gen.get_covariance_matrix()
+
+    if status_placeholder:
+        status_placeholder.info(
+            "🚀 Running MCMC sampler... This may take several minutes."
+        )
+    if progress_bar:
+        progress_bar.progress(0.4)
+
     # getting the maximum likelihood estimate
     get_maximum_likelihood_estimate = False
     fit_pl_utils.run_sampler_parallel(
@@ -57,11 +87,16 @@ def run_fit(
         Exp_data_pl,
         co_var_mat_pl,
         pl_data_gen,
-        nsteps=500,  # model_config_save["nsteps"],
+        nsteps=model_config_save["nsteps"],
         coeff_spread=model_config_save["coeff_spread"] * 3,
         num_coords=model_config_save["num_coords"],
         restart_sampling=False,
     )
+
+    if status_placeholder:
+        status_placeholder.success("✅ Fitting completed!")
+    if progress_bar:
+        progress_bar.progress(1.0)
 
 
 def display_workflow_status():
@@ -99,12 +134,12 @@ def data_management_tab():
         with st.expander("📁 File Configuration", expanded=True):
             csv_name = st.text_input(
                 "PL Data CSV Filename",
-                value="example_PL_data_Y6.csv",
+                value="experimental_data/y6_example/example_PL_data_Y6.csv",
                 help="CSV file containing photoluminescence data",
             )
             lifetime_csv = st.text_input(
                 "Lifetime Data CSV Filename",
-                value="temperature_lifetimes_exp.csv",
+                value="experimental_data/y6_example/temperature_lifetimes_exp.csv",
                 help="CSV file containing lifetime measurements",
             )
 
@@ -189,14 +224,26 @@ def data_management_tab():
             with st.expander("🔧 Data Modification", expanded=True):
                 # Wavelength range control
                 hws = st.session_state.get("hws", [0.8, 1.7])
-                st.session_state.hws_limits = st.slider(
-                    "🌈 Wavelength Range (eV)",
-                    min_value=float(min(hws)),
-                    max_value=float(max(hws)),
-                    value=st.session_state.get("hws_limits", (0.8, 1.7)),
-                    step=0.01,
-                    help="Select the wavelength range for analysis",
-                )
+                st.session_state.hws_limits =  [min(hws), max(hws)]
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.session_state.hws_limits[0] = st.number_input(
+                        "⬅️ Min Wavelength (eV)",
+                        value=st.session_state.hws_limits[0],
+                        min_value=float(min(hws)),
+                        max_value=float(max(hws) - 0.01),
+                        step=0.01,
+                        key="hws_min",
+                    )
+                with col2:
+                    st.session_state.hws_limits[1] = st.number_input(
+                        "➡️ Max Wavelength (eV)",
+                        value=st.session_state.hws_limits[1],
+                        min_value=float(min(hws) + 0.01),
+                        max_value=float(max(hws)),
+                        step=0.01,
+                        key="hws_max",
+                    )
 
                 # Step size control
                 step = st.number_input(
@@ -279,7 +326,7 @@ def data_management_tab():
         if "table_data" in st.session_state:
             with st.expander("📋 Data Summary", expanded=False):
                 st.dataframe(
-                    st.session_state["table_data"], use_container_width=True
+                    st.session_state["table_data"], width='stretch'
                 )
 
     with col_plots:
@@ -294,7 +341,7 @@ def data_management_tab():
             with plot_tab1:
                 st.plotly_chart(
                     st.session_state["pl_fig_interactive"],
-                    use_container_width=True,
+                    width='stretch',
                     key="main_data_plot",
                 )
                 st.caption(
@@ -322,7 +369,7 @@ def data_management_tab():
                 ):
                     st.plotly_chart(
                         st.session_state["pl_fig_comparison"],
-                        use_container_width=True,
+                        width='stretch',
                         key="comparison_plot",
                     )
                     st.caption("Comparison between original and modified data")
@@ -470,7 +517,7 @@ def model_configuration_tab():
 
                         # Display the interactive plot
                         st.plotly_chart(
-                            fig_interactive, use_container_width=True
+                            fig_interactive, width='stretch'
                         )
                         st.info(
                             "💡 **Interactive Features**: Hover over states to see energy levels and parameters"
@@ -504,7 +551,7 @@ def model_configuration_tab():
 
                         # Display the interactive plot
                         st.plotly_chart(
-                            fig_interactive, use_container_width=True
+                            fig_interactive, width='stretch'
                         )
 
                         # Also create matplotlib version for comparison/download
@@ -554,7 +601,7 @@ def fitting_tab():
         # Fitting parameters
         with st.expander("⚙️ Fitting Parameters", expanded=False):
             nsteps = st.number_input(
-                "Number of Steps", value=500, min_value=100, max_value=5000
+                "Number of Steps", value=500, min_value=10, max_value=5000
             )
             st.info("💡 More steps = better convergence but longer runtime")
 
@@ -562,6 +609,14 @@ def fitting_tab():
         run_fit_button = st.button("🏃‍♂️ Start Fitting", type="primary")
 
         if run_fit_button:
+            # Create live status display in col2
+            with col2:
+                st.subheader("📈 Fitting Progress")
+                status_placeholder = st.empty()
+                progress_bar = st.progress(0)
+                log_expander = st.expander("📋 Detailed Logs", expanded=True)
+                log_text = log_expander.empty()
+
             with st.spinner(
                 "Running MCMC fitting... This may take several minutes."
             ):
@@ -579,7 +634,29 @@ def fitting_tab():
                     # Update nsteps in config
                     model_config_save["nsteps"] = nsteps
 
-                    run_fit(model_config_save)
+                    # Capture output using context manager
+                    import sys
+                    from io import StringIO
+
+                    # Redirect stdout to capture print statements
+                    old_stdout = sys.stdout
+                    sys.stdout = captured_output = StringIO()
+
+                    try:
+                        run_fit(
+                            model_config_save, status_placeholder, progress_bar
+                        )
+                    finally:
+                        # Restore stdout
+                        sys.stdout = old_stdout
+
+                    # Display captured output
+                    output_text = captured_output.getvalue()
+                    if output_text:
+                        log_text.code(output_text, language="text")
+                    else:
+                        log_text.info("No console output captured")
+
                     st.success("✅ Fitting completed successfully!")
 
                     # Auto-load results
@@ -595,6 +672,9 @@ def fitting_tab():
 
                 except Exception as e:
                     st.error(f"❌ Fitting failed: {e!s}")
+                    import traceback
+
+                    log_text.code(traceback.format_exc(), language="python")
 
         # Load results section
         st.markdown("---")
