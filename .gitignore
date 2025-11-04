@@ -62,6 +62,8 @@ fit_results/*
 slurm_script/error/*
 slurm_script/output/*
 *.h5
+!example/fit_data/example_PL_data_Y6_mod/fit_1/sampler.h5
+!/example/fit_data/example_PL_data_Y6/fit_1/sampler.h5
 fit_experimental_emcee_pl
 *.json
 copilot_prompts.txt
