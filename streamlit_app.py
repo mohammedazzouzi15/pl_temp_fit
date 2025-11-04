@@ -143,7 +143,7 @@ def data_management_tab():
                 )
                 st.session_state["lifetime_csv"] = st.text_input(
                     "Lifetime Data CSV Filename",
-                    value="experimental_data/y6_example/temperature_lifetimes_exp.csv",
+                    value="example/experimental_data/y6_example/temperature_lifetimes_exp.csv",
                     help="CSV file containing lifetime measurements",
                 )
             if tab_selection == "Upload files":
