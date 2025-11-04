@@ -132,28 +132,50 @@ def data_management_tab():
     with col_controls:
         # File Configuration Section
         with st.expander("📁 File Configuration", expanded=True):
-            csv_name = st.text_input(
-                "PL Data CSV Filename",
-                value="experimental_data/y6_example/example_PL_data_Y6.csv",
-                help="CSV file containing photoluminescence data",
+            tab_selection = st.selectbox(
+                "Select upload tool:", ["Using paths", "Upload files"]
             )
-            lifetime_csv = st.text_input(
-                "Lifetime Data CSV Filename",
-                value="experimental_data/y6_example/temperature_lifetimes_exp.csv",
-                help="CSV file containing lifetime measurements",
-            )
-
+            if tab_selection == "Using paths":
+                st.session_state["csv_name"] = st.text_input(
+                    "PL Data CSV Filename",
+                    value="experimental_data/y6_example/example_PL_data_Y6.csv",
+                    help="CSV file containing photoluminescence data",
+                )
+                st.session_state["lifetime_csv"] = st.text_input(
+                    "Lifetime Data CSV Filename",
+                    value="experimental_data/y6_example/temperature_lifetimes_exp.csv",
+                    help="CSV file containing lifetime measurements",
+                )
+            if tab_selection == "Upload files":
+                st.session_state["csv_name"] = st.file_uploader(
+                    "Upload PL Data CSV",
+                    type=["csv"],
+                    help="Upload your photoluminescence data CSV file",
+                )
+                st.session_state["lifetime_csv"] = st.file_uploader(
+                    "Upload Lifetime Data CSV",
+                    type=["csv"],
+                    help="Upload your lifetime measurements CSV file",
+                )
         # Data Loading Section
         with st.expander("📊 Load Data", expanded=True):
             # File validation
-            csv_exists = Path(csv_name).exists()
-            lifetime_exists = Path(lifetime_csv).exists()
+            if st.session_state.get("csv_name", None) is None:
+                st.warning("⚠️ Please provide a PL data CSV file")
+                return
+            
+            csv_exists = Path(
+                st.session_state.get("csv_name", "not_loaded")
+            ).exists()
+            lifetime_exists = Path(
+                st.session_state.get("lifetime_csv", "not_loaded")
+            ).exists()
 
             st.write(
-                f"PL Data File: {'✅' if csv_exists else '❌'} {csv_name}"
+                f"PL Data File: {'✅' if csv_exists else '❌'} {st.session_state.get('csv_name', '')}"
             )
             st.write(
-                f"Lifetime File: {'✅' if lifetime_exists else '❌'} {lifetime_csv}"
+                f"Lifetime File: {'✅' if lifetime_exists else '❌'} {st.session_state.get('lifetime_csv', '')}"
             )
 
             if st.button(
@@ -171,7 +193,7 @@ def data_management_tab():
                             fig_matplotlib,
                             fig_path,
                         ) = load_and_plot_data(
-                            csv_name,
+                            st.session_state.get("csv_name", ""),
                             st.session_state.get("figures_dir", "figures"),
                         )
                         st.session_state["exp_data"] = exp_data
@@ -212,7 +234,7 @@ def data_management_tab():
                                 * len(temperature_lifetimes_exp),
                             }
                         )
-                        st.session_state["csv_name"] = csv_name
+                        # st.session_state["csv_name"] = csv_name
                         st.success("✅ Data loaded successfully!")
 
                     except Exception as e:
@@ -224,7 +246,7 @@ def data_management_tab():
             with st.expander("🔧 Data Modification", expanded=True):
                 # Wavelength range control
                 hws = st.session_state.get("hws", [0.8, 1.7])
-                st.session_state.hws_limits =  [min(hws), max(hws)]
+                st.session_state.hws_limits = [min(hws), max(hws)]
                 col1, col2 = st.columns(2)
                 with col1:
                     st.session_state.hws_limits[0] = st.number_input(
@@ -325,9 +347,7 @@ def data_management_tab():
         # Data Summary
         if "table_data" in st.session_state:
             with st.expander("📋 Data Summary", expanded=False):
-                st.dataframe(
-                    st.session_state["table_data"], width='stretch'
-                )
+                st.dataframe(st.session_state["table_data"], width="stretch")
 
     with col_plots:
         st.subheader("📈 Interactive Data Visualization")
@@ -341,7 +361,7 @@ def data_management_tab():
             with plot_tab1:
                 st.plotly_chart(
                     st.session_state["pl_fig_interactive"],
-                    width='stretch',
+                    width="stretch",
                     key="main_data_plot",
                 )
                 st.caption(
@@ -369,7 +389,7 @@ def data_management_tab():
                 ):
                     st.plotly_chart(
                         st.session_state["pl_fig_comparison"],
-                        width='stretch',
+                        width="stretch",
                         key="comparison_plot",
                     )
                     st.caption("Comparison between original and modified data")
@@ -516,9 +536,7 @@ def model_configuration_tab():
                         )
 
                         # Display the interactive plot
-                        st.plotly_chart(
-                            fig_interactive, width='stretch'
-                        )
+                        st.plotly_chart(fig_interactive, width="stretch")
                         st.info(
                             "💡 **Interactive Features**: Hover over states to see energy levels and parameters"
                         )
@@ -550,9 +568,7 @@ def model_configuration_tab():
                         )
 
                         # Display the interactive plot
-                        st.plotly_chart(
-                            fig_interactive, width='stretch'
-                        )
+                        st.plotly_chart(fig_interactive, width="stretch")
 
                         # Also create matplotlib version for comparison/download
                         fig_matplotlib, ax = (
