@@ -163,7 +163,7 @@ def data_management_tab():
             if st.session_state.get("csv_name", None) is None:
                 st.warning("⚠️ Please provide a PL data CSV file")
                 return
-            
+
             csv_exists = Path(
                 st.session_state.get("csv_name", "not_loaded")
             ).exists()
@@ -212,7 +212,9 @@ def data_management_tab():
                         st.session_state["fig_path"] = fig_path
 
                         temperature_lifetimes_exp, max_abs_pos_exp = (
-                            read_lifetime_data(lifetime_csv)
+                            read_lifetime_data(
+                                st.session_state.get("lifetime_csv", "")
+                            )
                         )
                         st.session_state["temperature_lifetimes_exp"] = (
                             temperature_lifetimes_exp
@@ -524,9 +526,7 @@ def model_configuration_tab():
                         model_config, model_config_save = (
                             config_utils.load_model_config(
                                 st.session_state["test_id"],
-                                database_folder=str(
-                                    Path(fit_data_base_dir) / ""
-                                ),
+                                database_folder=Path(fit_data_base_dir),
                             )
                         )
 
@@ -556,9 +556,7 @@ def model_configuration_tab():
                         model_config, model_config_save = (
                             config_utils.load_model_config(
                                 st.session_state["test_id"],
-                                database_folder=str(
-                                    Path(fit_data_base_dir) / ""
-                                ),
+                                database_folder=Path(fit_data_base_dir),
                             )
                         )
 
@@ -643,7 +641,7 @@ def fitting_tab():
                     model_config, model_config_save = (
                         config_utils.load_model_config(
                             st.session_state["test_id"],
-                            database_folder=str(Path(fit_data_base_dir) / ""),
+                            database_folder=Path(fit_data_base_dir),
                         )
                     )
 
