@@ -43,8 +43,7 @@ dev = [
 ]
 
 [project.urls]
-github = "https://github.com/mohammedazzouzi15/stk_search"
-documentation = "https://stk_search.readthedocs.io"
+github = "https://github.com/mohammedazzouzi15/pl_temp_fit"
 
 [tool.setuptools_scm]
 
