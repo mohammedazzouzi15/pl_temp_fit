@@ -66,3 +66,6 @@ fit_experimental_emcee_pl
 *.json
 copilot_prompts.txt
 working_data/
+
+paper/
+claude.md
